@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Photo and Signature Resizer for Online Forms - FormPhotoFit</title>
+  <meta
+    name="description"
+    content="Use FormPhotoFit as a free photo and signature resizer for online forms. Resize, compress, preview, and download photos or signatures under your target KB size."
+  />
+  <meta
+    name="keywords"
+    content="photo and signature resizer, photo resizer, signature resizer, photo compressor, signature compressor, resize photo for online form, compress photo under 50KB, compress signature under 20KB"
+  />
+  <meta name="author" content="FormPhotoFit" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://formphotofit.com/" />
+
+  <meta property="og:title" content="Photo and Signature Resizer - FormPhotoFit" />
+  <meta property="og:description" content="Resize and compress photos and signatures for online forms directly in your browser." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://formphotofit.com/" />
+  <meta property="og:site_name" content="FormPhotoFit" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Photo and Signature Resizer - FormPhotoFit" />
+  <meta name="twitter:description" content="Resize and compress photos and signatures for online forms." />
+
+  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg?v=1" />
+  <link rel="shortcut icon" type="image/svg+xml" href="/assets/logo.svg?v=1" />
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="script.js"></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "FormPhotoFit",
+    "url": "https://formphotofit.com/",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "description": "A free browser-based photo and signature resizer and compressor for online forms.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main navigation">
+      <a href="index.html" class="logo" aria-label="FormPhotoFit home">
+        <img src="assets/logo.svg" alt="FormPhotoFit logo" class="logo-img" />
+        <span>FormPhotoFit</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#tool">Tool</a>
+        <a href="#guide">Guide</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero section">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <p class="eyebrow">Free browser-based tool</p>
+          <h1>Photo and Signature Resizer for Online Forms</h1>
+          <p class="hero-text">
+            Resize and compress photos, signatures, and form images under your required KB size. No login, no upload to server, and no paid API.
+          </p>
+
+          <div class="hero-actions">
+            <a href="#tool" class="btn btn-primary">Resize Photo or Signature</a>
+            <a href="#presets" class="btn btn-secondary">View Presets</a>
+          </div>
+
+          <p class="privacy-pill">
+            🔒 Your image stays in your browser. Nothing is uploaded.
+          </p>
+        </div>
+
+        <div class="hero-card" aria-label="FormPhotoFit preview illustration">
+          <div class="mock-document">
+            <div class="mock-photo"></div>
+            <div class="mock-lines">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="mock-signature"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tool" class="section tool-section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Resize and compress</p>
+          <h2>Free photo and signature resizer</h2>
+          <p>
+            Upload an image, choose a preset or custom size, compress it under your target KB size, preview it, and download instantly.
+          </p>
+        </div>
+
+        <div class="tool-layout">
+          <div class="tool-panel card">
+            <h3>1. Upload image</h3>
+            <p class="small-text">
+              Supported formats: JPG, PNG, WebP, GIF. Maximum file size: 12 MB.
+            </p>
+
+            <div
+              id="dropZone"
+              class="drop-zone"
+              role="button"
+              tabindex="0"
+              aria-label="Upload photo or signature image"
+            >
+              <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+                aria-label="Choose image file"
+              />
+              <div class="drop-icon">⬆</div>
+              <strong>Click to upload</strong>
+              <span>or drag and drop your image here</span>
+            </div>
+
+            <p class="privacy-note">
+              Your image is processed only inside your browser. It is not uploaded to any server.
+            </p>
+
+            <div id="statusMessage" class="status-message" role="status">
+              Upload a photo or signature to start.
+            </div>
+
+            <div class="result-box">
+              <div>
+                <span class="result-label">Original size</span>
+                <strong id="originalSize">Not uploaded</strong>
+              </div>
+              <div>
+                <span class="result-label">Original dimensions</span>
+                <strong id="originalDimensions">Not uploaded</strong>
+              </div>
+            </div>
+
+            <h3 class="panel-subtitle">2. Choose settings</h3>
+
+            <label class="field-label" for="modeSelect">Image type</label>
+            <select id="modeSelect" class="input-control">
+              <option value="photo">Photo</option>
+              <option value="signature">Signature</option>
+              <option value="custom">Custom</option>
+            </select>
+
+            <label class="field-label" for="presetSelect">Preset</label>
+            <select id="presetSelect" class="input-control">
+              <option value="photo-200-230-50">Photo: 200 × 230 px, under 50 KB</option>
+              <option value="photo-300-400-100">Photo: 300 × 400 px, under 100 KB</option>
+              <option value="photo-600-600-200">Photo: 600 × 600 px, under 200 KB</option>
+              <option value="signature-140-60-20">Signature: 140 × 60 px, under 20 KB</option>
+              <option value="signature-300-100-50">Signature: 300 × 100 px, under 50 KB</option>
+              <option value="custom">Custom size</option>
+            </select>
+
+            <div class="input-grid">
+              <div>
+                <label class="field-label" for="targetWidth">Width px</label>
+                <input id="targetWidth" class="input-control" type="number" min="20" max="4000" value="200" />
+              </div>
+
+              <div>
+                <label class="field-label" for="targetHeight">Height px</label>
+                <input id="targetHeight" class="input-control" type="number" min="20" max="4000" value="230" />
+              </div>
+
+              <div>
+                <label class="field-label" for="targetKB">Target KB</label>
+                <input id="targetKB" class="input-control" type="number" min="5" max="2000" value="50" />
+              </div>
+
+              <div>
+                <label class="field-label" for="formatSelect">Format</label>
+                <select id="formatSelect" class="input-control">
+                  <option value="image/jpeg">JPG</option>
+                  <option value="image/webp">WebP</option>
+                  <option value="image/png">PNG</option>
+                </select>
+              </div>
+            </div>
+
+            <label class="form-check">
+              <input id="whiteBgCheck" class="form-check-input" type="checkbox" checked />
+              <span class="form-check-label">Use white background</span>
+            </label>
+
+            <label class="field-label" for="fitSelect">Fit method</label>
+            <select id="fitSelect" class="input-control">
+              <option value="auto">Auto recommended</option>
+              <option value="contain">Fit inside with padding</option>
+              <option value="cover">Fill and crop center</option>
+              <option value="stretch">Stretch to exact size</option>
+            </select>
+
+            <div class="button-group">
+              <button id="processBtn" class="btn btn-primary" type="button" disabled>
+                Resize & Compress
+              </button>
+              <button id="downloadBtn" class="btn btn-secondary" type="button" disabled>
+                Download
+              </button>
+              <button id="resetBtn" class="btn btn-danger" type="button" disabled>
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <div class="preview-panel">
+            <div class="card preview-card">
+              <div class="preview-header">
+                <h3>Preview</h3>
+                <span class="tag" id="previewTag">Waiting</span>
+              </div>
+
+              <div class="preview-wrap">
+                <canvas id="previewCanvas" width="600" height="600" aria-label="Processed image preview"></canvas>
+                <div id="emptyPreview" class="empty-preview">
+                  Your resized image preview will appear here
+                </div>
+              </div>
+            </div>
+
+            <div class="card result-card">
+              <h3>Output result</h3>
+
+              <div class="result-box">
+                <div>
+                  <span class="result-label">Output size</span>
+                  <strong id="outputSize">Not ready</strong>
+                </div>
+                <div>
+                  <span class="result-label">Output dimensions</span>
+                  <strong id="outputDimensions">Not ready</strong>
+                </div>
+                <div>
+                  <span class="result-label">Format</span>
+                  <strong id="outputFormat">Not ready</strong>
+                </div>
+                <div>
+                  <span class="result-label">Status</span>
+                  <strong id="outputStatus">Waiting</strong>
+                </div>
+              </div>
+
+              <p id="outputNote" class="recommendation">
+                Tip: JPG is usually best for photos. PNG is better for signatures but may not compress as much.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="presets" class="section presets-section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Quick presets</p>
+          <h2>Common photo and signature sizes</h2>
+          <p>
+            These presets are useful starting points for online forms. Always check the official form instructions before final submission.
+          </p>
+        </div>
+
+        <div class="preset-grid">
+          <article class="preset-card">
+            <h3>Photo 200 × 230</h3>
+            <p>Useful for small profile photo uploads where a compact image is needed.</p>
+            <span>Under 50 KB</span>
+          </article>
+
+          <article class="preset-card">
+            <h3>Photo 300 × 400</h3>
+            <p>A common vertical photo size for application and profile forms.</p>
+            <span>Under 100 KB</span>
+          </article>
+
+          <article class="preset-card">
+            <h3>Photo 600 × 600</h3>
+            <p>Square photo output for profile image requirements and general forms.</p>
+            <span>Under 200 KB</span>
+          </article>
+
+          <article class="preset-card">
+            <h3>Signature 140 × 60</h3>
+            <p>Small signature output for compact signature upload boxes.</p>
+            <span>Under 20 KB</span>
+          </article>
+
+          <article class="preset-card">
+            <h3>Signature 300 × 100</h3>
+            <p>Clearer signature output for forms that accept larger signature images.</p>
+            <span>Under 50 KB</span>
+          </article>
+
+          <article class="preset-card">
+            <h3>Custom size</h3>
+            <p>Enter your own width, height, file size, and output format.</p>
+            <span>Flexible</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="guide" class="section guide-section">
+      <div class="container guide-grid">
+        <div>
+          <p class="eyebrow">How it works</p>
+          <h2>Resize photos and signatures in 4 simple steps</h2>
+          <p>
+            FormPhotoFit is designed to make online form image preparation simple. Upload your image, choose a preset or custom size, process the image, and download the result.
+          </p>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card">
+            <span>1</span>
+            <h3>Upload</h3>
+            <p>Select your photo or signature image from your device.</p>
+          </article>
+
+          <article class="step-card">
+            <span>2</span>
+            <h3>Choose size</h3>
+            <p>Pick a preset or enter custom width, height, and target KB.</p>
+          </article>
+
+          <article class="step-card">
+            <span>3</span>
+            <h3>Compress</h3>
+            <p>The tool resizes and compresses your image inside your browser.</p>
+          </article>
+
+          <article class="step-card">
+            <span>4</span>
+            <h3>Download</h3>
+            <p>Preview and download the final image instantly.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section seo-content-section">
+      <div class="container">
+        <article class="seo-content-card">
+          <p class="eyebrow">Online form image tool</p>
+          <h2>Photo and Signature Resizer for Forms, Exams, and Applications</h2>
+
+          <p>
+            FormPhotoFit is a free photo and signature resizer made for online forms, exam applications, admission portals, job applications, scholarship forms, and student documents. Many online forms ask users to upload a photo or signature in a specific pixel size and under a fixed file size such as 20 KB, 50 KB, 100 KB, or 200 KB. This can be confusing when your phone photo is too large or your scanned signature does not match the required dimensions. FormPhotoFit helps you resize and compress images quickly without installing any software.
+          </p>
+
+          <p>
+            The tool is useful when you need to resize a photo for an online form, compress a signature under a target KB size, or convert an image into a more suitable format. You can upload a JPG, PNG, WebP, or other supported image file, check its original dimensions and file size, choose a preset, and download the final resized image. If the preset does not match your form requirement, you can enter your own custom width, height, target file size, and output format.
+          </p>
+
+          <p>
+            FormPhotoFit works directly inside your browser using image processing with Canvas. Your uploaded photo or signature is not sent to a server. This makes the tool simple, fast, and privacy-friendly. It is helpful for students and applicants who want a quick way to prepare documents without depending on heavy editing software or confusing online tools.
+          </p>
+
+          <p>
+            For photos, JPG usually gives the best balance of quality and file size. For signatures, PNG can keep text edges cleaner, while JPG or WebP may help reduce the file size more aggressively. FormPhotoFit also includes a white background option, which is useful when a transparent signature or dark scan needs a clean white background for form upload.
+          </p>
+
+          <p>
+            Always check the official instructions of the form you are filling before submitting your final image. Different exams, colleges, and job portals may ask for different dimensions and file size limits. FormPhotoFit gives you a fast way to create a matching image, but the final responsibility is to follow the exact rules mentioned on the official website.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="faq" class="section faq-section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Questions</p>
+          <h2>Frequently Asked Questions</h2>
+          <p>
+            Common questions about photo resizing, signature compression, file size, and privacy.
+          </p>
+        </div>
+
+        <div class="faq-list">
+          <details>
+            <summary>What is a photo and signature resizer?</summary>
+            <p>
+              A photo and signature resizer is a tool that changes image dimensions and file size so the image can match online form upload requirements.
+            </p>
+          </details>
+
+          <details>
+            <summary>Can I compress a photo under 50 KB?</summary>
+            <p>
+              Yes. Upload your photo, set the target size to 50 KB, choose JPG or WebP, and click Resize & Compress. Very detailed images may need lower quality to reach the target.
+            </p>
+          </details>
+
+          <details>
+            <summary>Can I compress a signature under 20 KB?</summary>
+            <p>
+              Yes. Choose a signature preset such as 140 × 60 px under 20 KB, then process and download the result.
+            </p>
+          </details>
+
+          <details>
+            <summary>Does FormPhotoFit upload my image?</summary>
+            <p>
+              No. Your image is processed locally inside your browser. It is not uploaded to any server.
+            </p>
+          </details>
+
+          <details>
+            <summary>Which format should I choose?</summary>
+            <p>
+              JPG is usually best for photos. PNG is good for signatures and sharp text. WebP can give smaller file sizes, but some old form portals may not accept WebP.
+            </p>
+          </details>
+
+          <details>
+            <summary>Why is my PNG still larger than the target KB?</summary>
+            <p>
+              PNG does not compress with quality settings like JPG or WebP. If your form allows JPG, choose JPG for better compression.
+            </p>
+          </details>
+
+          <details>
+            <summary>Can I use this for exam forms?</summary>
+            <p>
+              Yes, but always verify the official exam instructions first. Different exams may require different dimensions, formats, and file size limits.
+            </p>
+          </details>
+
+          <details>
+            <summary>Is FormPhotoFit free?</summary>
+            <p>
+              Yes. FormPhotoFit is a free browser-based image resizing and compression tool.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section feedback-section">
+      <div class="container">
+        <div class="feedback-card">
+          <h2>Help improve FormPhotoFit</h2>
+          <p>
+            Found a bug or want a new preset? Share feedback so the tool can be improved.
+          </p>
+          <a
+            id="feedbackLink"
+            class="btn btn-primary"
+            href="https://forms.gle/your-google-form-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Give Feedback
+          </a>
+          <p class="small-text">
+            Replace this link with your own Google Form later.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div>
+        <a href="index.html" class="logo footer-logo">
+          <img src="assets/logo.svg" alt="FormPhotoFit logo" class="logo-img" />
+          <span>FormPhotoFit</span>
+        </a>
+        <p>
+          FormPhotoFit is a free browser-based tool for resizing and compressing photos and signatures for online forms.
+        </p>
+      </div>
+
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms</a>
+        <a href="#tool">Use Tool</a>
+      </div>
+    </div>
+  </footer>
+  <div id="toastMessage" class="toast-message" role="status" aria-live="polite"></div>
+</body>
+</html>
