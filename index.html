@@ -71,6 +71,7 @@
 
       <div class="nav-links">
         <a href="#tool">Tool</a>
+        <a href="#presets">Presets</a>
         <a href="#guide">Guide</a>
         <a href="#faq">FAQ</a>
       </div>
@@ -90,6 +91,13 @@
           <div class="hero-actions">
             <a href="#tool" class="btn btn-primary">Resize Photo or Signature</a>
             <a href="#presets" class="btn btn-secondary">View Presets</a>
+          </div>
+
+          <div class="trust-points" aria-label="FormPhotoFit benefits">
+            <span>No signup</span>
+            <span> Mobile friendly</span>
+            <span> Free to use</span>
+            <span> Browser processing</span>
           </div>
 
           <p class="privacy-pill">
@@ -173,6 +181,21 @@
               <option value="signature">Signature</option>
               <option value="custom">Custom</option>
             </select>
+            <div class="quick-preset-box">
+  <h3>Quick Form Presets</h3>
+  <p>Choose a common photo or signature requirement instantly.</p>
+
+  <div class="quick-preset-grid">
+    <button type="button" class="quick-preset-btn" data-preset="photo-200-230-50">Photo 50 KB</button>
+    <button type="button" class="quick-preset-btn" data-preset="photo-300-400-100">Photo 100 KB</button>
+    <button type="button" class="quick-preset-btn" data-preset="photo-600-600-200">Photo 200 KB</button>
+    <button type="button" class="quick-preset-btn" data-preset="signature-140-60-20">Signature 20 KB</button>
+    <button type="button" class="quick-preset-btn" data-preset="signature-300-100-50">Signature 50 KB</button>
+    <button type="button" class="quick-preset-btn" data-preset="custom">Custom Size</button>
+  </div>
+</div>
+
+
 
             <label class="field-label" for="presetSelect">Preset</label>
             <select id="presetSelect" class="input-control">
@@ -183,6 +206,14 @@
               <option value="signature-300-100-50">Signature: 300 × 100 px, under 50 KB</option>
               <option value="custom">Custom size</option>
             </select>
+
+            <div class="quick-preset-buttons" aria-label="Quick preset buttons">
+              <button type="button" class="preset-chip active" data-preset="photo-200-230-50">Photo 50KB</button>
+              <button type="button" class="preset-chip" data-preset="photo-300-400-100">Photo 100KB</button>
+              <button type="button" class="preset-chip" data-preset="photo-600-600-200">Square 200KB</button>
+              <button type="button" class="preset-chip" data-preset="signature-140-60-20">Signature 20KB</button>
+              <button type="button" class="preset-chip" data-preset="signature-300-100-50">Signature 50KB</button>
+            </div>
 
             <div class="input-grid">
               <div>
@@ -210,10 +241,14 @@
               </div>
             </div>
 
-            <label class="form-check">
-              <input id="whiteBgCheck" class="form-check-input" type="checkbox" checked />
-              <span class="form-check-label">Use white background</span>
-            </label>
+            <label class="field-label">Background</label>
+            <div class="background-options" aria-label="Background color options">
+              <button type="button" class="bg-option active" data-bg="#ffffff">White</button>
+              <button type="button" class="bg-option" data-bg="#dbeafe">Light Blue</button>
+              <button type="button" class="bg-option" data-bg="#fee2e2">Light Red</button>
+              <button type="button" class="bg-option" data-bg="transparent">Transparent</button>
+            </div>
+            <input id="backgroundColor" type="hidden" value="#ffffff" />
 
             <label class="field-label" for="fitSelect">Fit method</label>
             <select id="fitSelect" class="input-control">
@@ -234,6 +269,12 @@
                 Reset
               </button>
             </div>
+          </div>
+
+          <div id="afterDownloadActions" class="after-download-actions" hidden>
+            <h3>Image ready 🎉</h3>
+            <p>Need another format? Try another preset or share FormPhotoFit with a friend.</p>
+            <button type="button" id="copyLinkBtn" class="btn btn-primary">Copy Website Link</button>
           </div>
 
           <div class="preview-panel">
@@ -276,6 +317,12 @@
               <p id="outputNote" class="recommendation">
                 Tip: JPG is usually best for photos. PNG is better for signatures but may not compress as much.
               </p>
+
+              <div id="afterDownloadActions" class="after-download-actions" hidden>
+                <p>Done? Share this free tool with a friend who fills online forms.</p>
+                <button id="copyLinkBtn" class="btn btn-secondary" type="button">Copy Website Link</button>
+                <a class="btn btn-primary" href="https://wa.me/?text=Resize%20photo%20and%20signature%20for%20forms%20free:%20https://formphotofit.com/" target="_blank" rel="noopener noreferrer">Share on WhatsApp</a>
+              </div>
             </div>
           </div>
         </div>
