@@ -853,3 +853,145 @@ details p {
   background: #f59e0b;
   color: #102033;
 }
+
+/* Growth update: trust badges, preset chips, background buttons, share CTA */
+.trust-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.trust-points span {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.quick-preset-buttons,
+.background-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
+.preset-chip,
+.bg-option {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font-weight: 850;
+  font-size: 0.88rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.preset-chip:hover,
+.bg-option:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary);
+}
+
+.preset-chip.active,
+.bg-option.active {
+  background: #e0f2fe;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.after-download-actions {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: #f1f7fd;
+  border: 1px solid var(--border);
+}
+
+.after-download-actions p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.after-download-actions .btn {
+  margin: 4px 6px 4px 0;
+}
+
+@media (max-width: 560px) {
+  .trust-points span,
+  .preset-chip,
+  .bg-option {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+.quick-preset-box,
+.trust-box,
+.after-download-actions {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+}
+
+.quick-preset-box p,
+.after-download-actions p {
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.quick-preset-grid,
+.trust-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quick-preset-btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.quick-preset-btn:hover,
+.quick-preset-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.trust-box span {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+.after-download-actions {
+  text-align: center;
+  background: linear-gradient(135deg, rgba(15, 122, 229, 0.12), rgba(16, 185, 129, 0.10));
+}
+
+@media (max-width: 560px) {
+  .quick-preset-btn,
+  .trust-box span {
+    width: 100%;
+    text-align: center;
+  }
+}
