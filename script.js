@@ -70,7 +70,11 @@ const targetWidth = document.getElementById("targetWidth");
 const targetHeight = document.getElementById("targetHeight");
 const targetKB = document.getElementById("targetKB");
 const formatSelect = document.getElementById("formatSelect");
-const whiteBgCheck = document.getElementById("whiteBgCheck");
+const backgroundColorInput = document.getElementById("backgroundColor");
+const presetChips = document.querySelectorAll(".preset-chip");
+const bgOptions = document.querySelectorAll(".bg-option");
+const afterDownloadActions = document.getElementById("afterDownloadActions");
+const copyLinkBtn = document.getElementById("copyLinkBtn");
 const fitSelect = document.getElementById("fitSelect");
 
 const processBtn = document.getElementById("processBtn");
@@ -127,6 +131,33 @@ processBtn.addEventListener("click", processImage);
 downloadBtn.addEventListener("click", downloadImage);
 resetBtn.addEventListener("click", resetTool);
 
+presetChips.forEach((button) => {
+  button.addEventListener("click", () => {
+    presetSelect.value = button.dataset.preset;
+    applyPreset();
+    trackEvent("preset_chip_click", { preset: button.dataset.preset });
+  });
+});
+
+bgOptions.forEach((button) => {
+  button.addEventListener("click", () => {
+    setBackgroundOption(button.dataset.bg);
+    clearResult();
+  });
+});
+
+if (copyLinkBtn) {
+  copyLinkBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("https://formphotofit.com/");
+      setStatus("Website link copied.", "success");
+      trackEvent("copy_link_click");
+    } catch {
+      setStatus("Could not copy link. You can manually copy formphotofit.com", "warning");
+    }
+  });
+}
+
 function handleImageFile(file) {
   if (!file.type.startsWith("image/")) {
     setStatus("Please upload a valid image file.", "error");
@@ -157,6 +188,11 @@ function handleImageFile(file) {
     resetBtn.disabled = false;
 
     setStatus("Image loaded successfully. Choose settings and click Resize & Compress.", "success");
+    trackEvent("image_upload_success", {
+      file_size_kb: Math.round(file.size / 1024),
+      width: image.naturalWidth,
+      height: image.naturalHeight
+    });
   };
 
   image.onerror = () => {
@@ -184,8 +220,9 @@ function applyPreset() {
   targetKB.value = preset.kb;
   formatSelect.value = preset.format;
   fitSelect.value = preset.fit;
-  whiteBgCheck.checked = preset.whiteBg;
+  setBackgroundOption(preset.whiteBg ? "#ffffff" : "transparent");
 
+  updateActivePresetChip(selected);
   clearResult();
 }
 
@@ -195,13 +232,13 @@ function applyModeDefaults() {
   if (mode === "photo") {
     formatSelect.value = "image/jpeg";
     fitSelect.value = "cover";
-    whiteBgCheck.checked = true;
+    setBackgroundOption("#ffffff");
   }
 
   if (mode === "signature") {
     formatSelect.value = "image/png";
     fitSelect.value = "contain";
-    whiteBgCheck.checked = true;
+    setBackgroundOption("#ffffff");
   }
 
   if (mode === "custom") {
@@ -256,6 +293,13 @@ async function processImage() {
 
     downloadBtn.disabled = false;
     setStatus("Image resized and compressed successfully.", "success");
+    trackEvent("image_process_success", {
+      mode: modeSelect.value,
+      preset: presetSelect.value,
+      target_kb: kb,
+      output_kb: Math.round(resultBlob.size / 1024),
+      format: readableFormat(mimeType)
+    });
   } catch (error) {
     setStatus("Something went wrong while processing. Try different settings.", "error");
     console.error(error);
@@ -267,13 +311,13 @@ async function processImage() {
 function drawProcessedImage(ctx, canvas, image) {
   const width = canvas.width;
   const height = canvas.height;
-  const useWhiteBg = whiteBgCheck.checked;
+  const selectedBackground = backgroundColorInput ? backgroundColorInput.value : "#ffffff";
   const fitMethod = getFitMethod();
 
   ctx.clearRect(0, 0, width, height);
 
-  if (useWhiteBg) {
-    ctx.fillStyle = "#ffffff";
+  if (selectedBackground !== "transparent") {
+    ctx.fillStyle = selectedBackground;
     ctx.fillRect(0, 0, width, height);
   }
 
@@ -447,13 +491,32 @@ function downloadImage() {
   link.download = `${cleanName || "formphotofit"}-resized.${extension}`;
   link.click();
 
-setStatus("Image downloaded successfully.", "success");
 
-downloadBtn.textContent = "Downloaded ✓";
+  setStatus("Image downloaded successfully.", "success");
+  if (afterDownloadActions) {
+  afterDownloadActions.hidden = false;
+}
 
-setTimeout(() => {
-  downloadBtn.textContent = "Download";
-}, 2500);
+trackFormPhotoEvent("image_download_success", {
+  mode: modeSelect.value,
+  preset: presetSelect.value,
+  format: readableFormat(state.resultMime)
+});
+  trackEvent("image_download_success", {
+    mode: modeSelect.value,
+    preset: presetSelect.value,
+    format: readableFormat(state.resultMime)
+  });
+
+  if (afterDownloadActions) {
+    afterDownloadActions.hidden = false;
+  }
+
+  downloadBtn.textContent = "Downloaded ✓";
+
+  setTimeout(() => {
+    downloadBtn.textContent = "Download";
+  }, 2500);
 }
 
 function resetTool() {
@@ -495,6 +558,10 @@ function clearResult() {
   previewTag.textContent = "Waiting";
 
   downloadBtn.disabled = true;
+
+  if (afterDownloadActions) {
+    afterDownloadActions.hidden = true;
+  }
 }
 
 function setStatus(message, type) {
@@ -526,6 +593,29 @@ function showToast(message, type) {
     toastMessage.classList.remove("show");
   }, 3000);
 }
+
+function updateActivePresetChip(selectedPreset) {
+  presetChips.forEach((button) => {
+    button.classList.toggle("active", button.dataset.preset === selectedPreset);
+  });
+}
+
+function setBackgroundOption(value) {
+  if (backgroundColorInput) {
+    backgroundColorInput.value = value;
+  }
+
+  bgOptions.forEach((button) => {
+    button.classList.toggle("active", button.dataset.bg === value);
+  });
+}
+
+function trackEvent(eventName, params = {}) {
+  if (typeof gtag === "function") {
+    gtag("event", eventName, params);
+  }
+}
+
 function isValidNumber(value, min, max) {
   return Number.isFinite(value) && value >= min && value <= max;
 }
@@ -550,4 +640,48 @@ function extensionFromMime(mimeType) {
   if (mimeType === "image/png") return "png";
   if (mimeType === "image/webp") return "webp";
   return "jpg";
+}
+
+const quickPresetButtons = document.querySelectorAll(".quick-preset-btn");
+const afterDownloadActions = document.getElementById("afterDownloadActions");
+const copyLinkBtn = document.getElementById("copyLinkBtn");
+
+quickPresetButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const presetValue = button.dataset.preset;
+
+    if (presetSelect) {
+      presetSelect.value = presetValue;
+      applyPreset();
+    }
+
+    quickPresetButtons.forEach((btn) => btn.classList.remove("active"));
+    button.classList.add("active");
+
+    trackFormPhotoEvent("quick_preset_selected", {
+      preset: presetValue
+    });
+  });
+});
+
+if (copyLinkBtn) {
+  copyLinkBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("https://formphotofit.com/");
+      setStatus("Website link copied.", "success");
+      trackFormPhotoEvent("copy_site_link");
+    } catch {
+      setStatus("Copy failed. Manually copy formphotofit.com", "warning");
+    }
+  });
+}
+
+function trackFormPhotoEvent(eventName, params = {}) {
+  if (typeof gtag === "function") {
+    gtag("event", eventName, {
+      tool_name: "formphotofit",
+      page_path: window.location.pathname,
+      ...params
+    });
+  }
 }
