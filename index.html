@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /> 
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>Photo and Signature Resizer for Online Forms - FormPhotoFit</title>
@@ -94,10 +94,10 @@
           </div>
 
           <div class="trust-points" aria-label="FormPhotoFit benefits">
-            <span>✅ No signup</span>
-            <span>✅ Mobile friendly</span>
-            <span>✅ Free to use</span>
-            <span>✅ Browser processing</span>
+            <span>No signup</span>
+            <span> Mobile friendly</span>
+            <span> Free to use</span>
+            <span> Browser processing</span>
           </div>
 
           <p class="privacy-pill">
@@ -207,6 +207,14 @@
               <option value="custom">Custom size</option>
             </select>
 
+            <div class="quick-preset-buttons" aria-label="Quick preset buttons">
+              <button type="button" class="preset-chip active" data-preset="photo-200-230-50">Photo 50KB</button>
+              <button type="button" class="preset-chip" data-preset="photo-300-400-100">Photo 100KB</button>
+              <button type="button" class="preset-chip" data-preset="photo-600-600-200">Square 200KB</button>
+              <button type="button" class="preset-chip" data-preset="signature-140-60-20">Signature 20KB</button>
+              <button type="button" class="preset-chip" data-preset="signature-300-100-50">Signature 50KB</button>
+            </div>
+
             <div class="input-grid">
               <div>
                 <label class="field-label" for="targetWidth">Width px</label>
@@ -263,6 +271,11 @@
             </div>
           </div>
 
+          <div id="afterDownloadActions" class="after-download-actions" hidden>
+            <h3>Image ready 🎉</h3>
+            <p>Need another format? Try another preset or share FormPhotoFit with a friend.</p>
+            <button type="button" id="copyLinkBtn" class="btn btn-primary">Copy Website Link</button>
+          </div>
 
           <div class="preview-panel">
             <div class="card preview-card">
