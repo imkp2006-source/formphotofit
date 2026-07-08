@@ -71,7 +71,7 @@ const targetHeight = document.getElementById("targetHeight");
 const targetKB = document.getElementById("targetKB");
 const formatSelect = document.getElementById("formatSelect");
 const backgroundColorInput = document.getElementById("backgroundColor");
-const presetChips = document.querySelectorAll(".preset-chip");
+const quickPresetButtons = document.querySelectorAll(".quick-preset-btn");
 const bgOptions = document.querySelectorAll(".bg-option");
 const afterDownloadActions = document.getElementById("afterDownloadActions");
 const copyLinkBtn = document.getElementById("copyLinkBtn");
@@ -131,11 +131,20 @@ processBtn.addEventListener("click", processImage);
 downloadBtn.addEventListener("click", downloadImage);
 resetBtn.addEventListener("click", resetTool);
 
-presetChips.forEach((button) => {
+quickPresetButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    presetSelect.value = button.dataset.preset;
-    applyPreset();
-    trackEvent("preset_chip_click", { preset: button.dataset.preset });
+    const presetValue = button.dataset.preset;
+
+    if (presetSelect) {
+      presetSelect.value = presetValue;
+      applyPreset();
+    }
+
+    updateActiveQuickPreset(presetValue);
+
+    trackFormPhotoEvent("quick_preset_selected", {
+      preset: presetValue
+    });
   });
 });
 
@@ -151,7 +160,7 @@ if (copyLinkBtn) {
     try {
       await navigator.clipboard.writeText("https://formphotofit.com/");
       setStatus("Website link copied.", "success");
-      trackEvent("copy_link_click");
+      trackFormPhotoEvent("copy_site_link");
     } catch {
       setStatus("Could not copy link. You can manually copy formphotofit.com", "warning");
     }
@@ -202,7 +211,6 @@ function handleImageFile(file) {
 
   image.src = imageUrl;
 }
-
 function applyPreset() {
   const selected = presetSelect.value;
 
@@ -222,10 +230,9 @@ function applyPreset() {
   fitSelect.value = preset.fit;
   setBackgroundOption(preset.whiteBg ? "#ffffff" : "transparent");
 
-  updateActivePresetChip(selected);
+  updateActiveQuickPreset(selected);
   clearResult();
 }
-
 function applyModeDefaults() {
   const mode = modeSelect.value;
 
@@ -491,26 +498,17 @@ function downloadImage() {
   link.download = `${cleanName || "formphotofit"}-resized.${extension}`;
   link.click();
 
-
   setStatus("Image downloaded successfully.", "success");
-  if (afterDownloadActions) {
-  afterDownloadActions.hidden = false;
-}
-
-trackFormPhotoEvent("image_download_success", {
-  mode: modeSelect.value,
-  preset: presetSelect.value,
-  format: readableFormat(state.resultMime)
-});
-  trackEvent("image_download_success", {
-    mode: modeSelect.value,
-    preset: presetSelect.value,
-    format: readableFormat(state.resultMime)
-  });
 
   if (afterDownloadActions) {
     afterDownloadActions.hidden = false;
   }
+
+  trackFormPhotoEvent("image_download_success", {
+    mode: modeSelect.value,
+    preset: presetSelect.value,
+    format: readableFormat(state.resultMime)
+  });
 
   downloadBtn.textContent = "Downloaded ✓";
 
@@ -594,8 +592,8 @@ function showToast(message, type) {
   }, 3000);
 }
 
-function updateActivePresetChip(selectedPreset) {
-  presetChips.forEach((button) => {
+function updateActiveQuickPreset(selectedPreset) {
+  quickPresetButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.preset === selectedPreset);
   });
 }
@@ -640,40 +638,6 @@ function extensionFromMime(mimeType) {
   if (mimeType === "image/png") return "png";
   if (mimeType === "image/webp") return "webp";
   return "jpg";
-}
-
-const quickPresetButtons = document.querySelectorAll(".quick-preset-btn");
-const afterDownloadActions = document.getElementById("afterDownloadActions");
-const copyLinkBtn = document.getElementById("copyLinkBtn");
-
-quickPresetButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    const presetValue = button.dataset.preset;
-
-    if (presetSelect) {
-      presetSelect.value = presetValue;
-      applyPreset();
-    }
-
-    quickPresetButtons.forEach((btn) => btn.classList.remove("active"));
-    button.classList.add("active");
-
-    trackFormPhotoEvent("quick_preset_selected", {
-      preset: presetValue
-    });
-  });
-});
-
-if (copyLinkBtn) {
-  copyLinkBtn.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText("https://formphotofit.com/");
-      setStatus("Website link copied.", "success");
-      trackFormPhotoEvent("copy_site_link");
-    } catch {
-      setStatus("Copy failed. Manually copy formphotofit.com", "warning");
-    }
-  });
 }
 
 function trackFormPhotoEvent(eventName, params = {}) {
