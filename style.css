@@ -854,7 +854,69 @@ details p {
   color: #102033;
 }
 
-/* Growth update: trust badges, preset chips, background buttons, share CTA */
+
+/* FormPhotoFit v1.5 polish: cleaned controls, premium UI, mobile improvements */
+:root {
+  --shadow-soft: 0 12px 34px rgba(15, 23, 42, 0.06);
+  --shadow-hover: 0 24px 70px rgba(15, 23, 42, 0.12);
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  right: -160px;
+  bottom: -180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.2), transparent 68%);
+  pointer-events: none;
+}
+
+.card,
+.tool-panel,
+.preset-card,
+.step-card,
+.feedback-card,
+.seo-content-card,
+.legal-card {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.preset-card:hover,
+.step-card:hover,
+.feedback-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(15, 122, 229, 0.24);
+}
+
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.24), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.btn-primary:hover::before {
+  transform: translateX(100%);
+}
+
 .trust-points {
   display: flex;
   flex-wrap: wrap;
@@ -870,9 +932,30 @@ details p {
   color: var(--text);
   font-weight: 800;
   font-size: 0.88rem;
+  box-shadow: var(--shadow-soft);
 }
 
-.quick-preset-buttons,
+.quick-preset-box,
+.after-download-actions {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(15, 122, 229, 0.06), rgba(16, 185, 129, 0.06));
+  border: 1px solid var(--border);
+}
+
+.quick-preset-box h3,
+.after-download-actions h3 {
+  margin-bottom: 8px;
+}
+
+.quick-preset-box p,
+.after-download-actions p {
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.quick-preset-grid,
 .background-options {
   display: flex;
   flex-wrap: wrap;
@@ -880,107 +963,85 @@ details p {
   margin: 12px 0 4px;
 }
 
-.preset-chip,
+.quick-preset-btn,
 .bg-option {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   border-radius: 999px;
-  padding: 9px 12px;
+  padding: 10px 14px;
   cursor: pointer;
   font-weight: 850;
-  font-size: 0.88rem;
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  font-size: 0.9rem;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.preset-chip:hover,
+.quick-preset-btn:hover,
 .bg-option:hover {
   transform: translateY(-1px);
   border-color: var(--primary);
+  box-shadow: 0 10px 24px rgba(15, 122, 229, 0.10);
 }
 
-.preset-chip.active,
+.quick-preset-btn.active,
 .bg-option.active {
-  background: #e0f2fe;
+  background: linear-gradient(135deg, rgba(15, 122, 229, 0.14), rgba(16, 185, 129, 0.14));
   border-color: var(--primary);
   color: var(--primary);
 }
 
-.after-download-actions {
-  margin-top: 18px;
-  padding: 16px;
-  border-radius: var(--radius-sm);
-  background: #f1f7fd;
-  border: 1px solid var(--border);
+.drop-zone {
+  position: relative;
+  overflow: hidden;
 }
 
-.after-download-actions p {
-  margin: 0 0 12px;
-  color: var(--muted);
-  font-weight: 750;
+.drop-zone::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(120deg, transparent, rgba(15, 122, 229, 0.16), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.8s ease;
+  pointer-events: none;
 }
 
-.after-download-actions .btn {
-  margin: 4px 6px 4px 0;
+.drop-zone:hover::before,
+.drop-zone.drag-over::before {
+  transform: translateX(100%);
 }
 
-@media (max-width: 560px) {
-  .trust-points span,
-  .preset-chip,
-  .bg-option {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-  }
+.drop-zone.drag-over {
+  transform: scale(1.01);
 }
 
-.quick-preset-box,
-.trust-box,
-.after-download-actions {
-  margin-top: 18px;
-  padding: 18px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-soft);
-  border: 1px solid var(--border);
+.drop-icon {
+  animation: floatIcon 2.4s ease-in-out infinite;
 }
 
-.quick-preset-box p,
-.after-download-actions p {
-  color: var(--muted);
-  margin-bottom: 14px;
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
-.quick-preset-grid,
-.trust-box {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.status-message.warning {
+  position: relative;
 }
 
-.quick-preset-btn {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  padding: 10px 14px;
+.status-message.warning::after {
+  content: "";
+  display: block;
+  height: 4px;
+  margin-top: 10px;
   border-radius: 999px;
-  font-weight: 800;
-  cursor: pointer;
+  background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+  background-size: 200% 100%;
+  animation: loadingBar 1.2s linear infinite;
 }
 
-.quick-preset-btn:hover,
-.quick-preset-btn.active {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
-}
-
-.trust-box span {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 9px 12px;
-  border-radius: 999px;
-  font-weight: 750;
-  color: var(--muted);
+@keyframes loadingBar {
+  from { background-position: 0% 0; }
+  to { background-position: 200% 0; }
 }
 
 .after-download-actions {
@@ -988,10 +1049,59 @@ details p {
   background: linear-gradient(135deg, rgba(15, 122, 229, 0.12), rgba(16, 185, 129, 0.10));
 }
 
+.after-download-actions .btn {
+  margin: 4px 6px 4px 0;
+}
+
+.input-control:hover {
+  border-color: rgba(15, 122, 229, 0.45);
+}
+
+.preview-wrap {
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+#previewCanvas {
+  animation: previewIn 0.25s ease;
+}
+
+@keyframes previewIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @media (max-width: 560px) {
+  .trust-points span,
   .quick-preset-btn,
-  .trust-box span {
+  .bg-option {
     width: 100%;
+    justify-content: center;
     text-align: center;
+  }
+
+  .tool-panel,
+  .preview-card,
+  .result-card,
+  .seo-content-card,
+  .feedback-card {
+    padding: 18px;
+  }
+
+  .quick-preset-box,
+  .after-download-actions {
+    padding: 16px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .trust-points span,
+  .quick-preset-btn,
+  .bg-option {
+    background: #0b1220;
+  }
+
+  .quick-preset-box,
+  .after-download-actions {
+    background: linear-gradient(135deg, rgba(15, 122, 229, 0.12), rgba(16, 185, 129, 0.08));
   }
 }
