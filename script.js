@@ -3,7 +3,7 @@ const MAX_FILE_SIZE = 12 * 1024 * 1024;
 const presets = {
   "photo-200-230-50": {
     mode: "photo",
-    width: 200,  
+    width: 200,
     height: 230,
     kb: 50,
     format: "image/jpeg",
