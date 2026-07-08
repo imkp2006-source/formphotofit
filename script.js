@@ -6,7 +6,7 @@ const presets = {
         width: 200,
         height: 230,
         kb: 50,
-        format: "image/jpeg",
+        format: "image/jpeg", 
         fit: "cover",
         whiteBg: true
     },
