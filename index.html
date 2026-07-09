@@ -60,6 +60,7 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#tool">Skip to photo resizer tool</a>
     <header class="site-header">
         <nav class="nav container" aria-label="Main navigation">
             <a href="index.html" class="logo" aria-label="FormPhotoFit home">
@@ -130,18 +131,19 @@
                 <div class="tool-layout">
                     <div class="tool-panel card">
                         <h3>1. Upload image</h3>
-                        <p class="small-text">
+                        <p id="uploadHelp" class="small-text">
                             Supported formats: JPG, PNG, WebP, GIF. Maximum file size: 12 MB.
                         </p>
 
-                        <div id="dropZone" class="drop-zone" role="button" tabindex="0" aria-label="Upload photo or signature image">
-                            <input type="file" id="imageInput" accept="image/*" aria-label="Choose image file" />
+                        <div id="dropZone" class="drop-zone" role="button" tabindex="0" aria-label="Upload photo or signature image" aria-describedby="uploadHelp uploadPrivacy">
+                            <input type="file" id="imageInput" accept="image/*" aria-label="Choose image file" aria-describedby="uploadHelp" />
                             <div class="drop-icon">⬆</div>
                             <strong>Click to upload</strong>
                             <span>or drag and drop your image here</span>
+                            <small class="drop-hint">JPG, PNG, WebP or GIF · Max 12 MB</small>
                         </div>
 
-                        <p class="privacy-note">
+                        <p id="uploadPrivacy" class="privacy-note">
                             Your image is processed only inside your browser. It is not uploaded to any server.
                         </p>
 
@@ -170,22 +172,22 @@
             </select>
                         <div class="quick-preset-box">
                             <h3>Quick Form Presets</h3>
-                            <p>Choose a common photo or signature requirement instantly.</p>
+                            <p>Choose a common requirement instantly. Custom settings appear only when you need them.</p>
 
                             <div class="quick-preset-grid">
-                                <button type="button" class="quick-preset-btn" data-preset="photo-200-230-50">Photo 50 KB</button>
-                                <button type="button" class="quick-preset-btn" data-preset="photo-300-400-100">Photo 100 KB</button>
-                                <button type="button" class="quick-preset-btn" data-preset="photo-600-600-200">Photo 200 KB</button>
-                                <button type="button" class="quick-preset-btn" data-preset="signature-140-60-20">Signature 20 KB</button>
-                                <button type="button" class="quick-preset-btn" data-preset="signature-300-100-50">Signature 50 KB</button>
-                                <button type="button" class="quick-preset-btn" data-preset="custom">Custom Size</button>
+                                <button type="button" class="quick-preset-btn active" data-preset="photo-200-230-50" aria-pressed="true">Photo 50 KB</button>
+                                <button type="button" class="quick-preset-btn" data-preset="photo-300-400-100" aria-pressed="false">Photo 100 KB</button>
+                                <button type="button" class="quick-preset-btn" data-preset="photo-600-600-200" aria-pressed="false">Photo 200 KB</button>
+                                <button type="button" class="quick-preset-btn" data-preset="signature-140-60-20" aria-pressed="false">Signature 20 KB</button>
+                                <button type="button" class="quick-preset-btn" data-preset="signature-300-100-50" aria-pressed="false">Signature 50 KB</button>
+                                <button type="button" class="quick-preset-btn" data-preset="custom" aria-pressed="false">Custom Size</button>
                             </div>
                         </div>
 
 
 
-                        <label class="field-label" for="presetSelect">Preset</label>
-                        <select id="presetSelect" class="input-control">
+                        <label class="field-label preset-select-hidden" for="presetSelect">Preset</label>
+                        <select id="presetSelect" class="input-control preset-select-hidden">
               <option value="photo-200-230-50">Photo: 200 × 230 px, under 50 KB</option>
               <option value="photo-300-400-100">Photo: 300 × 400 px, under 100 KB</option>
               <option value="photo-600-600-200">Photo: 600 × 600 px, under 200 KB</option>
@@ -193,15 +195,11 @@
               <option value="signature-300-100-50">Signature: 300 × 100 px, under 50 KB</option>
               <option value="custom">Custom size</option>
             </select>
-
-                        <div class="quick-preset-buttons" aria-label="Quick preset buttons">
-                            <button type="button" class="preset-chip active" data-preset="photo-200-230-50">Photo 50KB</button>
-                            <button type="button" class="preset-chip" data-preset="photo-300-400-100">Photo 100KB</button>
-                            <button type="button" class="preset-chip" data-preset="photo-600-600-200">Square 200KB</button>
-                            <button type="button" class="preset-chip" data-preset="signature-140-60-20">Signature 20KB</button>
-                            <button type="button" class="preset-chip" data-preset="signature-300-100-50">Signature 50KB</button>
-                        </div>
-
+                        <div id="advancedSettings" class="advanced-settings" hidden>
+                            <div class="advanced-settings-header">
+                                <h3>Custom settings</h3>
+                                <p>Use these only when your form asks for exact width, height, KB, format, or background.</p>
+                            </div>
                         <div class="input-grid">
                             <div>
                                 <label class="field-label" for="targetWidth">Width px</label>
@@ -230,10 +228,10 @@
 
                         <label class="field-label">Background</label>
                         <div class="background-options" aria-label="Background color options">
-                            <button type="button" class="bg-option active" data-bg="#ffffff">White</button>
-                            <button type="button" class="bg-option" data-bg="#dbeafe">Light Blue</button>
-                            <button type="button" class="bg-option" data-bg="#fee2e2">Light Red</button>
-                            <button type="button" class="bg-option" data-bg="transparent">Transparent</button>
+                            <button type="button" class="bg-option active" data-bg="#ffffff" aria-pressed="true">White</button>
+                            <button type="button" class="bg-option" data-bg="#dbeafe" aria-pressed="false">Light Blue</button>
+                            <button type="button" class="bg-option" data-bg="#fee2e2" aria-pressed="false">Light Red</button>
+                            <button type="button" class="bg-option" data-bg="transparent" aria-pressed="false">Transparent</button>
                         </div>
                         <input id="backgroundColor" type="hidden" value="#ffffff" />
 
@@ -244,6 +242,8 @@
               <option value="cover">Fill and crop center</option>
               <option value="stretch">Stretch to exact size</option>
             </select>
+
+                        </div>
 
                         <div class="button-group">
                             <button id="processBtn" class="btn btn-primary" type="button" disabled>
