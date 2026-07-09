@@ -71,11 +71,12 @@ const targetHeight = document.getElementById("targetHeight");
 const targetKB = document.getElementById("targetKB");
 const formatSelect = document.getElementById("formatSelect");
 const backgroundColorInput = document.getElementById("backgroundColor");
-const presetChips = document.querySelectorAll(".preset-chip");
+const quickPresetButtons = document.querySelectorAll(".quick-preset-btn");
 const bgOptions = document.querySelectorAll(".bg-option");
 const afterDownloadActions = document.getElementById("afterDownloadActions");
 const copyLinkBtn = document.getElementById("copyLinkBtn");
 const fitSelect = document.getElementById("fitSelect");
+const advancedSettings = document.getElementById("advancedSettings");
 
 const processBtn = document.getElementById("processBtn");
 const downloadBtn = document.getElementById("downloadBtn");
@@ -131,13 +132,17 @@ processBtn.addEventListener("click", processImage);
 downloadBtn.addEventListener("click", downloadImage);
 resetBtn.addEventListener("click", resetTool);
 
-presetChips.forEach((button) => {
+quickPresetButtons.forEach((button) => {
     button.addEventListener("click", () => {
-        presetSelect.value = button.dataset.preset;
-        applyPreset();
-        trackEvent("preset_chip_click", {
-            preset: button.dataset.preset
-        });
+        const presetValue = button.dataset.preset;
+
+        if (presetSelect) {
+            presetSelect.value = presetValue;
+            applyPreset();
+        }
+
+        updateActivePresetChip(presetValue);
+        trackFormPhotoEvent("quick_preset_selected", { preset: presetValue });
     });
 });
 
@@ -210,6 +215,7 @@ function applyPreset() {
 
     if (selected === "custom") {
         modeSelect.value = "custom";
+        showAdvancedSettings(true);
         updateActivePresetChip("custom");
         clearResult();
         return;
@@ -225,6 +231,7 @@ function applyPreset() {
     formatSelect.value = preset.format;
     fitSelect.value = preset.fit;
     setBackgroundOption(preset.whiteBg ? "#ffffff" : "transparent");
+    showAdvancedSettings(false);
 
     updateActivePresetChip(selected);
     clearResult();
@@ -247,6 +254,9 @@ function applyModeDefaults() {
 
     if (mode === "custom") {
         presetSelect.value = "custom";
+        showAdvancedSettings(true);
+    } else {
+        showAdvancedSettings(false);
     }
 
     clearResult();
@@ -274,6 +284,7 @@ async function processImage() {
     }
 
     setStatus("Processing image...", "warning");
+    document.body.classList.add("is-processing");
     processBtn.disabled = true;
 
     try {
@@ -308,6 +319,7 @@ async function processImage() {
         setStatus("Something went wrong while processing. Try different settings.", "error");
         console.error(error);
     } finally {
+        document.body.classList.remove("is-processing");
         processBtn.disabled = false;
     }
 }
@@ -591,9 +603,16 @@ function showToast(message, type) {
 }
 
 function updateActivePresetChip(selectedPreset) {
-    presetChips.forEach((button) => {
-        button.classList.toggle("active", button.dataset.preset === selectedPreset);
+    quickPresetButtons.forEach((button) => {
+        const isActive = button.dataset.preset === selectedPreset;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
+}
+
+function showAdvancedSettings(shouldShow) {
+    if (!advancedSettings) return;
+    advancedSettings.hidden = !shouldShow;
 }
 
 function setBackgroundOption(value) {
@@ -602,7 +621,9 @@ function setBackgroundOption(value) {
     }
 
     bgOptions.forEach((button) => {
-        button.classList.toggle("active", button.dataset.bg === value);
+        const isActive = button.dataset.bg === value;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
 }
 
@@ -638,25 +659,9 @@ function extensionFromMime(mimeType) {
     return "jpg";
 }
 
-const quickPresetButtons = document.querySelectorAll(".quick-preset-btn");
 
-quickPresetButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-        const presetValue = button.dataset.preset;
-
-        if (presetSelect) {
-            presetSelect.value = presetValue;
-            applyPreset();
-        }
-
-        quickPresetButtons.forEach((btn) => btn.classList.remove("active"));
-        button.classList.add("active");
-
-        trackFormPhotoEvent("quick_preset_selected", {
-            preset: presetValue
-        });
-    });
-});
+showAdvancedSettings(presetSelect && presetSelect.value === "custom");
+updateActivePresetChip(presetSelect ? presetSelect.value : "photo-200-230-50");
 
 function trackFormPhotoEvent(eventName, params = {}) {
     if (typeof gtag === "function") {
