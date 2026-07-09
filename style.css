@@ -11,7 +11,7 @@
     --accent-dark: #059669;
     --danger: #ef4444;
     --danger-dark: #dc2626;
-    --warning: #f59e0b; 
+    --warning: #f59e0b;
     --success: #16a34a;
     --shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
     --radius: 24px;
@@ -962,5 +962,240 @@ details p {
     .trust-box span {
         width: 100%;
         text-align: center;
+    }
+}
+
+/* FormPhotoFit v1.7 — one-click simplicity and premium upload polish */
+.preset-select-hidden {
+    display: none !important;
+}
+
+.drop-zone {
+    position: relative;
+    min-height: 220px;
+    overflow: hidden;
+    border-color: rgba(15, 122, 229, 0.45);
+    background:
+        linear-gradient(135deg, rgba(15, 122, 229, 0.10), rgba(16, 185, 129, 0.10)),
+        var(--surface-soft);
+}
+
+.drop-zone::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(120deg, transparent, rgba(15, 122, 229, 0.22), transparent);
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+    pointer-events: none;
+}
+
+.drop-zone:hover::before,
+.drop-zone.drag-over::before {
+    transform: translateX(120%);
+}
+
+.drop-zone strong {
+    position: relative;
+    z-index: 1;
+    font-size: 1.05rem;
+}
+
+.drop-icon {
+    position: relative;
+    z-index: 1;
+    width: 60px;
+    height: 60px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #ffffff;
+    animation: uploadFloat 2.4s ease-in-out infinite;
+}
+
+.drop-hint {
+    position: relative;
+    z-index: 1;
+    color: var(--muted);
+    font-weight: 750;
+}
+
+@keyframes uploadFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+.quick-preset-box {
+    background:
+        radial-gradient(circle at top left, rgba(15, 122, 229, 0.10), transparent 36%),
+        var(--surface-soft);
+}
+
+.quick-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.quick-preset-btn {
+    min-height: 46px;
+    text-align: center;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.quick-preset-btn:hover,
+.quick-preset-btn.active {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(15, 122, 229, 0.16);
+}
+
+.advanced-settings {
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.64);
+    animation: softReveal 0.25s ease;
+}
+
+.advanced-settings-header p {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 0.94rem;
+}
+
+@keyframes softReveal {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+body.is-processing #processBtn {
+    position: relative;
+    overflow: hidden;
+}
+
+body.is-processing #processBtn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+    animation: buttonShine 1.1s linear infinite;
+}
+
+@keyframes buttonShine {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+}
+
+@media (max-width: 560px) {
+    .quick-preset-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .drop-zone {
+        min-height: 200px;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .advanced-settings {
+        background: rgba(15, 23, 42, 0.74);
+    }
+
+    .drop-zone {
+        background:
+            linear-gradient(135deg, rgba(15, 122, 229, 0.16), rgba(16, 185, 129, 0.12)),
+            #1e293b;
+    }
+}
+
+
+/* FormPhotoFit v1.8 — accessibility and stability polish */
+.skip-link {
+    position: absolute;
+    left: 16px;
+    top: 10px;
+    z-index: 99999;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: var(--text);
+    color: var(--surface);
+    font-weight: 900;
+    transform: translateY(-160%);
+    transition: transform 0.18s ease;
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+    outline: 3px solid rgba(15, 122, 229, 0.35);
+    outline-offset: 3px;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.drop-zone:focus-visible,
+summary:focus-visible {
+    outline: 3px solid rgba(15, 122, 229, 0.42);
+    outline-offset: 3px;
+}
+
+.hero-text,
+.small-text,
+.recommendation,
+.section-heading p:not(.eyebrow),
+.seo-content-card p,
+.feedback-card p,
+.preset-card p,
+.step-card p,
+details p,
+.footer-content p,
+.footer-links {
+    color: #52657c;
+}
+
+.trust-points span {
+    color: #24364b;
+}
+
+.quick-preset-btn[aria-pressed="true"],
+.bg-option[aria-pressed="true"] {
+    box-shadow: 0 0 0 3px rgba(15, 122, 229, 0.15), 0 12px 24px rgba(15, 122, 229, 0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+    .hero-text,
+    .small-text,
+    .recommendation,
+    .section-heading p:not(.eyebrow),
+    .seo-content-card p,
+    .feedback-card p,
+    .preset-card p,
+    .step-card p,
+    details p,
+    .footer-content p,
+    .footer-links {
+        color: #b5c2d3;
+    }
+
+    .trust-points span {
+        color: #f8fafc;
+        background: rgba(15, 23, 42, 0.9);
+    }
+
+    .skip-link {
+        background: #f8fafc;
+        color: #020617;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
     }
 }
