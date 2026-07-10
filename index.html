@@ -170,6 +170,54 @@
               <option value="signature">Signature</option>
               <option value="custom">Custom</option>
             </select>
+
+                        <section class="requirement-finder" aria-labelledby="requirementFinderTitle">
+                            <div class="requirement-finder-header">
+                                <div>
+                                    <p class="requirement-kicker">Start here</p>
+                                    <h3 id="requirementFinderTitle">What are you preparing?</h3>
+                                    <p>Choose a common use case and FormPhotoFit will apply a practical starting preset. Always verify the exact rules on the official form.</p>
+                                </div>
+                                <label class="sr-only" for="requirementSearch">Search requirements</label>
+                                <input id="requirementSearch" class="requirement-search" type="search" placeholder="Search passport, SSC, college, signature..." autocomplete="off" />
+                            </div>
+
+                            <div id="requirementGrid" class="requirement-grid" aria-live="polite">
+                                <button type="button" class="requirement-card" data-requirement="passport" data-preset="photo-300-400-100">
+                                    <span class="requirement-icon" aria-hidden="true">🛂</span>
+                                    <span><strong>Passport-style photo</strong><small>300 × 400 px · under 100 KB</small></span>
+                                </button>
+                                <button type="button" class="requirement-card" data-requirement="ssc upsc government exam" data-preset="photo-200-230-50">
+                                    <span class="requirement-icon" aria-hidden="true">🏛️</span>
+                                    <span><strong>SSC / UPSC form</strong><small>200 × 230 px · under 50 KB</small></span>
+                                </button>
+                                <button type="button" class="requirement-card" data-requirement="jee neet entrance exam" data-preset="photo-200-230-50">
+                                    <span class="requirement-icon" aria-hidden="true">🎓</span>
+                                    <span><strong>JEE / NEET form</strong><small>200 × 230 px · under 50 KB</small></span>
+                                </button>
+                                <button type="button" class="requirement-card" data-requirement="college admission university" data-preset="photo-300-400-100">
+                                    <span class="requirement-icon" aria-hidden="true">🏫</span>
+                                    <span><strong>College admission</strong><small>300 × 400 px · under 100 KB</small></span>
+                                </button>
+                                <button type="button" class="requirement-card" data-requirement="job employment application profile" data-preset="photo-600-600-200">
+                                    <span class="requirement-icon" aria-hidden="true">💼</span>
+                                    <span><strong>Job application</strong><small>600 × 600 px · under 200 KB</small></span>
+                                </button>
+                                <button type="button" class="requirement-card" data-requirement="signature sign 20kb" data-preset="signature-140-60-20">
+                                    <span class="requirement-icon" aria-hidden="true">✍️</span>
+                                    <span><strong>Small signature</strong><small>140 × 60 px · under 20 KB</small></span>
+                                </button>
+                            </div>
+
+                            <div id="requirementApplied" class="requirement-applied" hidden role="status">
+                                <span aria-hidden="true">✓</span>
+                                <div>
+                                    <strong id="requirementAppliedTitle">Requirement applied</strong>
+                                    <small id="requirementAppliedDetails">You can now upload and process your image.</small>
+                                </div>
+                            </div>
+                        </section>
+
                         <div class="quick-preset-box">
                             <h3>Quick Form Presets</h3>
                             <p>Choose a common requirement instantly. Custom settings appear only when you need them.</p>
