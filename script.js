@@ -77,6 +77,11 @@ const afterDownloadActions = document.getElementById("afterDownloadActions");
 const copyLinkBtn = document.getElementById("copyLinkBtn");
 const fitSelect = document.getElementById("fitSelect");
 const advancedSettings = document.getElementById("advancedSettings");
+const requirementSearch = document.getElementById("requirementSearch");
+const requirementCards = document.querySelectorAll(".requirement-card");
+const requirementApplied = document.getElementById("requirementApplied");
+const requirementAppliedTitle = document.getElementById("requirementAppliedTitle");
+const requirementAppliedDetails = document.getElementById("requirementAppliedDetails");
 
 const processBtn = document.getElementById("processBtn");
 const downloadBtn = document.getElementById("downloadBtn");
@@ -145,6 +150,47 @@ quickPresetButtons.forEach((button) => {
         trackFormPhotoEvent("quick_preset_selected", { preset: presetValue });
     });
 });
+
+requirementCards.forEach((card) => {
+    card.addEventListener("click", () => {
+        const presetValue = card.dataset.preset;
+        const title = card.querySelector("strong")?.textContent || "Requirement";
+        const details = card.querySelector("small")?.textContent || "Preset applied";
+
+        requirementCards.forEach((item) => {
+            const isActive = item === card;
+            item.classList.toggle("active", isActive);
+            item.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+
+        presetSelect.value = presetValue;
+        applyPreset();
+        showRequirementApplied(title, details);
+        trackFormPhotoEvent("requirement_selected", {
+            requirement: card.dataset.requirement,
+            preset: presetValue
+        });
+    });
+});
+
+if (requirementSearch) {
+    requirementSearch.addEventListener("input", () => {
+        const query = requirementSearch.value.trim().toLowerCase();
+        let visibleCount = 0;
+
+        requirementCards.forEach((card) => {
+            const searchableText = `${card.dataset.requirement || ""} ${card.textContent}`.toLowerCase();
+            const isVisible = !query || searchableText.includes(query);
+            card.hidden = !isVisible;
+            if (isVisible) visibleCount += 1;
+        });
+
+        requirementSearch.setAttribute(
+            "aria-label",
+            visibleCount === 1 ? "1 requirement found" : `${visibleCount} requirements found`
+        );
+    });
+}
 
 bgOptions.forEach((button) => {
     button.addEventListener("click", () => {
@@ -608,6 +654,16 @@ function updateActivePresetChip(selectedPreset) {
         button.classList.toggle("active", isActive);
         button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
+}
+
+function showRequirementApplied(title, details) {
+    if (!requirementApplied || !requirementAppliedTitle || !requirementAppliedDetails) return;
+
+    requirementAppliedTitle.textContent = `${title} preset applied`;
+    requirementAppliedDetails.textContent = `${details}. Verify the official form instructions before submitting.`;
+    requirementApplied.hidden = false;
+
+    requirementApplied.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function showAdvancedSettings(shouldShow) {
