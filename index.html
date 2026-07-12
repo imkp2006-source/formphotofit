@@ -183,27 +183,43 @@
                             </div>
 
                             <div id="requirementGrid" class="requirement-grid" aria-live="polite">
-                                <button type="button" class="requirement-card" data-requirement="passport" data-preset="photo-300-400-100">
+                                <button type="button" class="requirement-card popular" data-requirement="passport visa id photo" data-preset="photo-300-400-100" data-ready-for="Passport-style photo">
                                     <span class="requirement-icon" aria-hidden="true">🛂</span>
                                     <span><strong>Passport-style photo</strong><small>300 × 400 px · under 100 KB</small></span>
                                 </button>
-                                <button type="button" class="requirement-card" data-requirement="ssc upsc government exam" data-preset="photo-200-230-50">
+                                <button type="button" class="requirement-card popular" data-requirement="ssc upsc government exam civil services" data-preset="photo-200-230-50" data-ready-for="SSC / UPSC form">
                                     <span class="requirement-icon" aria-hidden="true">🏛️</span>
                                     <span><strong>SSC / UPSC form</strong><small>200 × 230 px · under 50 KB</small></span>
                                 </button>
-                                <button type="button" class="requirement-card" data-requirement="jee neet entrance exam" data-preset="photo-200-230-50">
+                                <button type="button" class="requirement-card popular" data-requirement="jee neet entrance exam medical engineering" data-preset="photo-200-230-50" data-ready-for="JEE / NEET form">
                                     <span class="requirement-icon" aria-hidden="true">🎓</span>
                                     <span><strong>JEE / NEET form</strong><small>200 × 230 px · under 50 KB</small></span>
                                 </button>
-                                <button type="button" class="requirement-card" data-requirement="college admission university" data-preset="photo-300-400-100">
+                                <button type="button" class="requirement-card" data-requirement="ibps sbi po bank exam banking" data-preset="photo-200-230-50" data-ready-for="Bank exam form">
+                                    <span class="requirement-icon" aria-hidden="true">🏦</span>
+                                    <span><strong>IBPS / SBI form</strong><small>200 × 230 px · under 50 KB</small></span>
+                                </button>
+                                <button type="button" class="requirement-card" data-requirement="railway rrb recruitment exam" data-preset="photo-200-230-50" data-ready-for="Railway recruitment form">
+                                    <span class="requirement-icon" aria-hidden="true">🚆</span>
+                                    <span><strong>Railway / RRB form</strong><small>200 × 230 px · under 50 KB</small></span>
+                                </button>
+                                <button type="button" class="requirement-card" data-requirement="cuet gate cat entrance exam" data-preset="photo-300-400-100" data-ready-for="Entrance exam form">
+                                    <span class="requirement-icon" aria-hidden="true">📝</span>
+                                    <span><strong>CUET / GATE / CAT</strong><small>300 × 400 px · under 100 KB</small></span>
+                                </button>
+                                <button type="button" class="requirement-card" data-requirement="college admission university" data-preset="photo-300-400-100" data-ready-for="College admission">
                                     <span class="requirement-icon" aria-hidden="true">🏫</span>
                                     <span><strong>College admission</strong><small>300 × 400 px · under 100 KB</small></span>
                                 </button>
-                                <button type="button" class="requirement-card" data-requirement="job employment application profile" data-preset="photo-600-600-200">
+                                <button type="button" class="requirement-card" data-requirement="job employment application profile resume" data-preset="photo-600-600-200" data-ready-for="Job application">
                                     <span class="requirement-icon" aria-hidden="true">💼</span>
                                     <span><strong>Job application</strong><small>600 × 600 px · under 200 KB</small></span>
                                 </button>
-                                <button type="button" class="requirement-card" data-requirement="signature sign 20kb" data-preset="signature-140-60-20">
+                                <button type="button" class="requirement-card" data-requirement="pan aadhaar voter id driving licence identity card" data-preset="photo-300-400-100" data-ready-for="ID document photo">
+                                    <span class="requirement-icon" aria-hidden="true">🪪</span>
+                                    <span><strong>ID document photo</strong><small>300 × 400 px · under 100 KB</small></span>
+                                </button>
+                                <button type="button" class="requirement-card popular" data-requirement="signature sign 20kb small" data-preset="signature-140-60-20" data-ready-for="Small signature">
                                     <span class="requirement-icon" aria-hidden="true">✍️</span>
                                     <span><strong>Small signature</strong><small>140 × 60 px · under 20 KB</small></span>
                                 </button>
@@ -293,6 +309,23 @@
 
                         </div>
 
+
+                        <div id="processProgress" class="process-progress" hidden aria-live="polite">
+                            <div class="process-progress-top">
+                                <strong id="processProgressLabel">Preparing image…</strong>
+                                <span id="processProgressPercent">0%</span>
+                            </div>
+                            <div class="process-progress-track" aria-hidden="true">
+                                <span id="processProgressBar"></span>
+                            </div>
+                            <div class="process-steps" aria-hidden="true">
+                                <span data-step="prepare">Prepare</span>
+                                <span data-step="resize">Resize</span>
+                                <span data-step="compress">Compress</span>
+                                <span data-step="done">Done</span>
+                            </div>
+                        </div>
+
                         <div class="button-group">
                             <button id="processBtn" class="btn btn-primary" type="button" disabled>
                 Resize & Compress
@@ -340,6 +373,10 @@
                                 <div>
                                     <span class="result-label">Status</span>
                                     <strong id="outputStatus">Waiting</strong>
+                                </div>
+                                <div class="ready-for-result">
+                                    <span class="result-label">Ready for</span>
+                                    <strong id="outputReadyFor">Choose a requirement</strong>
                                 </div>
                             </div>
 
