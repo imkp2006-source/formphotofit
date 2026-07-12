@@ -53,7 +53,8 @@ const state = {
     fileName: "",
     resultBlob: null,
     resultUrl: "",
-    resultMime: "image/jpeg"
+    resultMime: "image/jpeg",
+    activeRequirement: "General online form"
 };
 
 const imageInput = document.getElementById("imageInput");
@@ -97,6 +98,12 @@ const outputDimensions = document.getElementById("outputDimensions");
 const outputFormat = document.getElementById("outputFormat");
 const outputStatus = document.getElementById("outputStatus");
 const outputNote = document.getElementById("outputNote");
+const outputReadyFor = document.getElementById("outputReadyFor");
+const processProgress = document.getElementById("processProgress");
+const processProgressLabel = document.getElementById("processProgressLabel");
+const processProgressPercent = document.getElementById("processProgressPercent");
+const processProgressBar = document.getElementById("processProgressBar");
+const processStepLabels = document.querySelectorAll(".process-steps span");
 
 dropZone.addEventListener("click", () => imageInput.click());
 
@@ -146,6 +153,7 @@ quickPresetButtons.forEach((button) => {
             applyPreset();
         }
 
+        state.activeRequirement = getPresetReadyFor(presetValue);
         updateActivePresetChip(presetValue);
         trackFormPhotoEvent("quick_preset_selected", { preset: presetValue });
     });
@@ -163,6 +171,7 @@ requirementCards.forEach((card) => {
             item.setAttribute("aria-pressed", isActive ? "true" : "false");
         });
 
+        state.activeRequirement = card.dataset.readyFor || title;
         presetSelect.value = presetValue;
         applyPreset();
         showRequirementApplied(title, details);
@@ -332,16 +341,24 @@ async function processImage() {
     setStatus("Processing image...", "warning");
     document.body.classList.add("is-processing");
     processBtn.disabled = true;
+    startProcessProgress();
 
     try {
+        updateProcessProgress(20, "Preparing image…", "prepare");
+        await nextFrame();
+
         const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
 
         const ctx = canvas.getContext("2d");
         drawProcessedImage(ctx, canvas, state.image);
+        updateProcessProgress(48, "Resizing to exact dimensions…", "resize");
+        await nextFrame();
 
         const resultBlob = await compressCanvas(canvas, mimeType, kb);
+        updateProcessProgress(82, "Optimizing file size…", "compress");
+        await nextFrame();
 
         state.resultBlob = resultBlob;
         state.resultMime = mimeType;
@@ -353,6 +370,7 @@ async function processImage() {
         updateOutput(resultBlob, width, height, mimeType, kb);
 
         downloadBtn.disabled = false;
+        updateProcessProgress(100, "Done — your image is ready.", "done");
         setStatus("Image resized and compressed successfully.", "success");
         trackEvent("image_process_success", {
             mode: modeSelect.value,
@@ -367,6 +385,9 @@ async function processImage() {
     } finally {
         document.body.classList.remove("is-processing");
         processBtn.disabled = false;
+        window.setTimeout(() => {
+            if (processProgress) processProgress.hidden = true;
+        }, 900);
     }
 }
 
@@ -517,6 +538,7 @@ function updateOutput(blob, width, height, mimeType, targetKBValue) {
     outputDimensions.textContent = `${width} × ${height}px`;
     outputFormat.textContent = readableFormat(mimeType);
     previewTag.textContent = `${width} × ${height}`;
+    if (outputReadyFor) outputReadyFor.textContent = state.activeRequirement || "General online form";
 
     if (isUnderTarget) {
         outputStatus.textContent = "Under target";
@@ -607,6 +629,7 @@ function clearResult() {
     outputFormat.textContent = "Not ready";
     outputStatus.textContent = "Waiting";
     outputStatus.style.color = "inherit";
+    if (outputReadyFor) outputReadyFor.textContent = state.activeRequirement || "Choose a requirement";
     outputNote.textContent =
         "Tip: JPG is usually best for photos. PNG is better for signatures but may not compress as much.";
     previewTag.textContent = "Waiting";
@@ -681,6 +704,42 @@ function setBackgroundOption(value) {
         button.classList.toggle("active", isActive);
         button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
+}
+
+
+function getPresetReadyFor(presetValue) {
+    const labels = {
+        "photo-200-230-50": "Photo form requiring under 50 KB",
+        "photo-300-400-100": "Passport, admission, or ID-style form",
+        "photo-600-600-200": "Profile or job application",
+        "signature-140-60-20": "Signature form requiring under 20 KB",
+        "signature-300-100-50": "Signature form requiring under 50 KB",
+        "custom": "Custom requirement"
+    };
+    return labels[presetValue] || "General online form";
+}
+
+function startProcessProgress() {
+    if (!processProgress) return;
+    processProgress.hidden = false;
+    updateProcessProgress(8, "Preparing image…", "prepare");
+}
+
+function updateProcessProgress(percent, label, activeStep) {
+    if (processProgressLabel) processProgressLabel.textContent = label;
+    if (processProgressPercent) processProgressPercent.textContent = `${percent}%`;
+    if (processProgressBar) processProgressBar.style.width = `${percent}%`;
+
+    processStepLabels.forEach((step) => {
+        const order = ["prepare", "resize", "compress", "done"];
+        const activeIndex = order.indexOf(activeStep);
+        const stepIndex = order.indexOf(step.dataset.step);
+        step.classList.toggle("active", stepIndex <= activeIndex);
+    });
+}
+
+function nextFrame() {
+    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
 function trackEvent(eventName, params = {}) {
