@@ -104,6 +104,19 @@ const processProgressLabel = document.getElementById("processProgressLabel");
 const processProgressPercent = document.getElementById("processProgressPercent");
 const processProgressBar = document.getElementById("processProgressBar");
 const processStepLabels = document.querySelectorAll(".process-steps span");
+const validationReport = document.getElementById("validationReport");
+const validationScore = document.getElementById("validationScore");
+const validationScoreBar = document.getElementById("validationScoreBar");
+const validationSummary = document.getElementById("validationSummary");
+const validationAdvice = document.getElementById("validationAdvice");
+const validationItems = {
+    dimensions: document.getElementById("validationDimensions"),
+    fileSize: document.getElementById("validationFileSize"),
+    brightness: document.getElementById("validationBrightness"),
+    contrast: document.getElementById("validationContrast"),
+    sharpness: document.getElementById("validationSharpness"),
+    background: document.getElementById("validationBackground")
+};
 
 dropZone.addEventListener("click", () => imageInput.click());
 
@@ -368,6 +381,7 @@ async function processImage() {
 
         drawPreview(canvas);
         updateOutput(resultBlob, width, height, mimeType, kb);
+        generateValidationReport(canvas, resultBlob, width, height, kb);
 
         downloadBtn.disabled = false;
         updateProcessProgress(100, "Done — your image is ready.", "done");
@@ -639,6 +653,8 @@ function clearResult() {
     if (afterDownloadActions) {
         afterDownloadActions.hidden = true;
     }
+
+    resetValidationReport();
 }
 
 function setStatus(message, type) {
@@ -706,6 +722,126 @@ function setBackgroundOption(value) {
     });
 }
 
+
+function generateValidationReport(canvas, blob, width, height, targetKBValue) {
+    if (!validationReport) return;
+
+    const metrics = analyzeCanvasQuality(canvas);
+    const sizePass = blob.size <= targetKBValue * 1024;
+    const dimensionsPass = width >= 100 && height >= 60;
+    const brightnessPass = metrics.meanBrightness >= 65 && metrics.meanBrightness <= 225;
+    const contrastPass = metrics.contrast >= 28;
+    const sharpnessPass = metrics.sharpness >= 10;
+    const backgroundPass = metrics.edgeUniformity >= 0.55;
+
+    let score = 100;
+    const advice = [];
+
+    if (!dimensionsPass) { score -= 20; advice.push("Use larger output dimensions when the portal allows it."); }
+    if (!sizePass) { score -= 24; advice.push("Reduce dimensions or choose JPG/WebP to meet the target file size."); }
+    if (!brightnessPass) {
+        score -= 12;
+        advice.push(metrics.meanBrightness < 65 ? "The image looks dark; increase lighting or exposure." : "The image looks very bright; reduce exposure to preserve detail.");
+    }
+    if (!contrastPass) { score -= 12; advice.push("Increase contrast slightly so the subject or signature is clearer."); }
+    if (!sharpnessPass) { score -= 18; advice.push("The image may be soft or blurry; use a sharper original image."); }
+    if (!backgroundPass && modeSelect.value === "photo") { score -= 8; advice.push("The outer edges are visually varied; official photos often work better with a plain background."); }
+
+    score = Math.max(25, Math.min(100, Math.round(score)));
+    validationReport.hidden = false;
+    validationScore.textContent = String(score);
+    validationScoreBar.style.width = `${score}%`;
+    validationSummary.textContent = score >= 90 ? "Excellent technical quality." : score >= 75 ? "Good result with minor improvements possible." : score >= 55 ? "Usable, but review the warnings below." : "Needs improvement before submission.";
+
+    setValidationItem(validationItems.dimensions, dimensionsPass ? "pass" : "warn", `${width} × ${height}px`);
+    setValidationItem(validationItems.fileSize, sizePass ? "pass" : "fail", `${formatFileSize(blob.size)} ${sizePass ? "meets" : "exceeds"} the target`);
+    setValidationItem(validationItems.brightness, brightnessPass ? "pass" : "warn", `${Math.round(metrics.meanBrightness)}/255 average`);
+    setValidationItem(validationItems.contrast, contrastPass ? "pass" : "warn", `${Math.round(metrics.contrast)} contrast score`);
+    setValidationItem(validationItems.sharpness, sharpnessPass ? "pass" : "warn", `${Math.round(metrics.sharpness)} detail score`);
+    setValidationItem(validationItems.background, backgroundPass ? "pass" : "warn", `${Math.round(metrics.edgeUniformity * 100)}% edge consistency`);
+
+    validationAdvice.innerHTML = "";
+    (advice.length ? advice : ["The processed image passes the current technical checks. Verify the official portal instructions before submitting."]).forEach((message) => {
+        const li = document.createElement("li");
+        li.textContent = message;
+        validationAdvice.appendChild(li);
+    });
+
+    trackFormPhotoEvent("validation_report_generated", {
+        score,
+        file_size_pass: sizePass,
+        brightness_pass: brightnessPass,
+        contrast_pass: contrastPass,
+        sharpness_pass: sharpnessPass
+    });
+}
+
+function analyzeCanvasQuality(canvas) {
+    const sample = document.createElement("canvas");
+    const maxSide = 180;
+    const scale = Math.min(1, maxSide / Math.max(canvas.width, canvas.height));
+    sample.width = Math.max(24, Math.round(canvas.width * scale));
+    sample.height = Math.max(24, Math.round(canvas.height * scale));
+    const ctx = sample.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(canvas, 0, 0, sample.width, sample.height);
+    const { data } = ctx.getImageData(0, 0, sample.width, sample.height);
+    const luminance = new Float32Array(sample.width * sample.height);
+    let sum = 0;
+
+    for (let i = 0, p = 0; i < data.length; i += 4, p += 1) {
+        const value = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+        luminance[p] = value;
+        sum += value;
+    }
+
+    const mean = sum / luminance.length;
+    let variance = 0;
+    let edgeEnergy = 0;
+    let edgeCount = 0;
+    let edgeDeviation = 0;
+    let borderCount = 0;
+
+    for (let y = 0; y < sample.height; y += 1) {
+        for (let x = 0; x < sample.width; x += 1) {
+            const index = y * sample.width + x;
+            const value = luminance[index];
+            variance += (value - mean) ** 2;
+            if (x > 0 && y > 0) {
+                edgeEnergy += Math.abs(value - luminance[index - 1]) + Math.abs(value - luminance[index - sample.width]);
+                edgeCount += 2;
+            }
+            const isBorder = x < 3 || y < 3 || x >= sample.width - 3 || y >= sample.height - 3;
+            if (isBorder) {
+                edgeDeviation += Math.abs(value - mean);
+                borderCount += 1;
+            }
+        }
+    }
+
+    const contrast = Math.sqrt(variance / luminance.length);
+    const sharpness = edgeCount ? edgeEnergy / edgeCount : 0;
+    const meanEdgeDeviation = borderCount ? edgeDeviation / borderCount : 255;
+    const edgeUniformity = Math.max(0, Math.min(1, 1 - meanEdgeDeviation / 90));
+
+    return { meanBrightness: mean, contrast, sharpness, edgeUniformity };
+}
+
+function setValidationItem(element, status, message) {
+    if (!element) return;
+    element.classList.remove("pass", "warn", "fail");
+    element.classList.add(status);
+    const icon = element.querySelector(".validation-icon");
+    const text = element.querySelector("small");
+    if (icon) icon.textContent = status === "pass" ? "✓" : status === "fail" ? "×" : "!";
+    if (text) text.textContent = message;
+}
+
+function resetValidationReport() {
+    if (!validationReport) return;
+    validationReport.hidden = true;
+    if (validationScore) validationScore.textContent = "--";
+    if (validationScoreBar) validationScoreBar.style.width = "0%";
+}
 
 function getPresetReadyFor(presetValue) {
     const labels = {

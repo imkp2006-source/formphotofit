@@ -104,16 +104,15 @@
                     </p>
                 </div>
 
-                <div class="hero-card" aria-label="FormPhotoFit preview illustration">
-                    <div class="mock-document">
-                        <div class="mock-photo"></div>
-                        <div class="mock-lines">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                        <div class="mock-signature"></div>
-                    </div>
+                <div class="hero-card">
+                    <img
+                        src="assets/formphotofit-hero.png"
+                        alt="FormPhotoFit photo and signature resizer for online forms"
+                        class="hero-product-image"
+                        width="1024"
+                        height="1024"
+                        fetchpriority="high"
+                    />
                 </div>
             </div>
         </section>
@@ -383,6 +382,37 @@
                             <p id="outputNote" class="recommendation">
                                 Tip: JPG is usually best for photos. PNG is better for signatures but may not compress as much.
                             </p>
+
+                            <section id="validationReport" class="validation-report" hidden aria-labelledby="validationReportTitle" aria-live="polite">
+                                <div class="validation-report-head">
+                                    <div>
+                                        <span class="result-label">Rule-based quality check</span>
+                                        <h3 id="validationReportTitle">Image Validation Report</h3>
+                                        <p id="validationSummary">Process an image to generate a report.</p>
+                                    </div>
+                                    <div class="validation-score" aria-label="Overall validation score">
+                                        <strong id="validationScore">--</strong>
+                                        <span>/100</span>
+                                    </div>
+                                </div>
+
+                                <div class="validation-meter" aria-hidden="true"><span id="validationScoreBar"></span></div>
+
+                                <div class="validation-grid">
+                                    <article class="validation-item" id="validationDimensions"><span class="validation-icon">–</span><div><strong>Dimensions</strong><small>Waiting</small></div></article>
+                                    <article class="validation-item" id="validationFileSize"><span class="validation-icon">–</span><div><strong>File size</strong><small>Waiting</small></div></article>
+                                    <article class="validation-item" id="validationBrightness"><span class="validation-icon">–</span><div><strong>Brightness</strong><small>Waiting</small></div></article>
+                                    <article class="validation-item" id="validationContrast"><span class="validation-icon">–</span><div><strong>Contrast</strong><small>Waiting</small></div></article>
+                                    <article class="validation-item" id="validationSharpness"><span class="validation-icon">–</span><div><strong>Sharpness</strong><small>Waiting</small></div></article>
+                                    <article class="validation-item" id="validationBackground"><span class="validation-icon">–</span><div><strong>Edge background</strong><small>Waiting</small></div></article>
+                                </div>
+
+                                <div class="validation-advice">
+                                    <strong>Suggestions</strong>
+                                    <ul id="validationAdvice"><li>Your suggestions will appear here.</li></ul>
+                                </div>
+                                <p class="validation-disclaimer">This is an automated visual-quality estimate, not an official portal approval or face-detection check.</p>
+                            </section>
 
                             <div id="afterDownloadActions" class="after-download-actions" hidden>
                                 <p>Done? Share this free tool with a friend who fills online forms.</p>
