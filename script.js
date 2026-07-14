@@ -923,3 +923,117 @@ function trackFormPhotoEvent(eventName, params = {}) {
         });
     }
 }
+
+// FormPhotoFit v2.2 — Smart Requirement Center
+const popularRequirementButtons = document.querySelectorAll("[data-requirement-target]");
+const recentRequirementsBox = document.getElementById("recentRequirements");
+const recentRequirementChips = document.getElementById("recentRequirementChips");
+const clearRecentRequirements = document.getElementById("clearRecentRequirements");
+const requirementDetailsTitle = document.getElementById("requirementDetailsTitle");
+const requirementDetailDimensions = document.getElementById("requirementDetailDimensions");
+const requirementDetailSize = document.getElementById("requirementDetailSize");
+const requirementDetailFormat = document.getElementById("requirementDetailFormat");
+const requirementDetailBackground = document.getElementById("requirementDetailBackground");
+const copySettingsBtn = document.getElementById("copySettingsBtn");
+const clearToolBtn = document.getElementById("clearToolBtn");
+const RECENT_REQUIREMENTS_KEY = "formphotofit_recent_requirements_v1";
+
+function getRequirementCardData(card) {
+    const preset = presets[card.dataset.preset] || null;
+    return {
+        key: card.dataset.requirement || card.dataset.readyFor || "requirement",
+        title: card.dataset.readyFor || card.querySelector("strong")?.textContent || "Requirement",
+        details: card.querySelector("small")?.textContent || "Custom settings",
+        preset: card.dataset.preset,
+        width: preset?.width || Number(targetWidth.value),
+        height: preset?.height || Number(targetHeight.value),
+        kb: preset?.kb || Number(targetKB.value),
+        format: readableFormat(preset?.format || formatSelect.value),
+        background: preset?.whiteBg === false ? "Transparent" : "White"
+    };
+}
+
+function updateRequirementDetails(data) {
+    if (!data) return;
+    if (requirementDetailsTitle) requirementDetailsTitle.textContent = data.title;
+    if (requirementDetailDimensions) requirementDetailDimensions.textContent = `${data.width} × ${data.height} px`;
+    if (requirementDetailSize) requirementDetailSize.textContent = `${data.kb} KB`;
+    if (requirementDetailFormat) requirementDetailFormat.textContent = data.format;
+    if (requirementDetailBackground) requirementDetailBackground.textContent = data.background;
+}
+
+function saveRecentRequirement(data) {
+    try {
+        const previous = JSON.parse(localStorage.getItem(RECENT_REQUIREMENTS_KEY) || "[]");
+        const next = [data, ...previous.filter((item) => item.key !== data.key)].slice(0, 4);
+        localStorage.setItem(RECENT_REQUIREMENTS_KEY, JSON.stringify(next));
+        renderRecentRequirements();
+    } catch (error) { console.warn("Recent requirements unavailable", error); }
+}
+
+function renderRecentRequirements() {
+    if (!recentRequirementsBox || !recentRequirementChips) return;
+    let items = [];
+    try { items = JSON.parse(localStorage.getItem(RECENT_REQUIREMENTS_KEY) || "[]"); } catch {}
+    recentRequirementChips.innerHTML = "";
+    recentRequirementsBox.hidden = items.length === 0;
+    items.forEach((item) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = item.title;
+        button.addEventListener("click", () => {
+            const card = [...requirementCards].find((candidate) => candidate.dataset.requirement === item.key || candidate.dataset.readyFor === item.title);
+            if (card) card.click();
+        });
+        recentRequirementChips.appendChild(button);
+    });
+}
+
+requirementCards.forEach((card) => {
+    card.addEventListener("click", () => {
+        const data = getRequirementCardData(card);
+        updateRequirementDetails(data);
+        saveRecentRequirement(data);
+    });
+});
+
+popularRequirementButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        const target = button.dataset.requirementTarget;
+        const card = [...requirementCards].find((candidate) => (candidate.dataset.requirement || "").includes(target));
+        if (card) card.click();
+    });
+});
+
+if (clearRecentRequirements) clearRecentRequirements.addEventListener("click", () => {
+    localStorage.removeItem(RECENT_REQUIREMENTS_KEY);
+    renderRecentRequirements();
+});
+
+if (copySettingsBtn) copySettingsBtn.addEventListener("click", async () => {
+    const text = [
+        `Requirement: ${requirementDetailsTitle?.textContent || state.activeRequirement}`,
+        `Width: ${targetWidth.value} px`,
+        `Height: ${targetHeight.value} px`,
+        `Maximum size: ${targetKB.value} KB`,
+        `Format: ${readableFormat(formatSelect.value)}`,
+        `Background: ${backgroundColorInput.value === "transparent" ? "Transparent" : "White"}`
+    ].join("\n");
+    try { await navigator.clipboard.writeText(text); setStatus("Settings copied.", "success"); trackFormPhotoEvent("requirement_settings_copied"); }
+    catch { setStatus("Could not copy settings.", "warning"); }
+});
+
+if (clearToolBtn) clearToolBtn.addEventListener("click", () => {
+    resetTool();
+    if (requirementSearch) {
+        requirementSearch.value = "";
+        requirementCards.forEach((card) => card.hidden = false);
+    }
+    requirementCards.forEach((card) => { card.classList.remove("active"); card.setAttribute("aria-pressed", "false"); });
+    if (requirementApplied) requirementApplied.hidden = true;
+    state.activeRequirement = "General online form";
+    updateRequirementDetails({title:"General online form",width:200,height:230,kb:50,format:"JPG",background:"White"});
+    setStatus("Tool cleared. Choose a requirement or upload a new image.", "");
+});
+
+renderRecentRequirements();
