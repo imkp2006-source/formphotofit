@@ -148,6 +148,15 @@
 <label class="sr-only" for="requirementSearch">Search requirements</label>
 <input autocomplete="off" class="requirement-search" id="requirementSearch" placeholder="Search passport, SSC, college, signature..." type="search"/>
 </div>
+<div aria-label="Filter requirements by category" class="requirement-category-filters" id="requirementCategoryFilters" role="group">
+<button aria-pressed="true" class="category-filter active" data-category="all" type="button">All</button>
+<button aria-pressed="false" class="category-filter" data-category="exams" type="button">Indian Exams</button>
+<button aria-pressed="false" class="category-filter" data-category="ids" type="button">Government IDs</button>
+<button aria-pressed="false" class="category-filter" data-category="international" type="button">Passport &amp; Visa</button>
+<button aria-pressed="false" class="category-filter" data-category="professional" type="button">Professional</button>
+<button aria-pressed="false" class="category-filter" data-category="signature" type="button">Signatures</button>
+<button aria-pressed="false" class="category-filter" data-category="favorites" type="button">★ Favorites</button>
+</div>
 
 <div aria-label="Popular requirements" class="requirement-shortcuts">
 <div class="requirement-shortcut-head"><strong>Popular</strong><span>One-click settings</span></div>
@@ -163,43 +172,43 @@
 <div class="recent-requirement-chips" id="recentRequirementChips"></div>
 </div>
 <div aria-live="polite" class="requirement-grid" id="requirementGrid">
-<button class="requirement-card popular" data-preset="photo-300-400-100" data-ready-for="Passport-style photo" data-requirement="passport visa id photo" type="button">
+<button class="requirement-card popular" data-category="international" data-preset="photo-300-400-100" data-ready-for="Passport-style photo" data-requirement="passport visa id photo" type="button">
 <span aria-hidden="true" class="requirement-icon">🛂</span>
 <span><strong>Passport-style photo</strong><small>300 × 400 px · under 100 KB</small></span>
 </button>
-<button class="requirement-card popular" data-preset="photo-200-230-50" data-ready-for="SSC / UPSC form" data-requirement="ssc upsc government exam civil services" type="button">
+<button class="requirement-card popular" data-category="exams" data-preset="photo-200-230-50" data-ready-for="SSC / UPSC form" data-requirement="ssc upsc government exam civil services" type="button">
 <span aria-hidden="true" class="requirement-icon">🏛️</span>
 <span><strong>SSC / UPSC form</strong><small>200 × 230 px · under 50 KB</small></span>
 </button>
-<button class="requirement-card popular" data-preset="photo-200-230-50" data-ready-for="JEE / NEET form" data-requirement="jee neet entrance exam medical engineering" type="button">
+<button class="requirement-card popular" data-category="exams" data-preset="photo-200-230-50" data-ready-for="JEE / NEET form" data-requirement="jee neet entrance exam medical engineering" type="button">
 <span aria-hidden="true" class="requirement-icon">🎓</span>
 <span><strong>JEE / NEET form</strong><small>200 × 230 px · under 50 KB</small></span>
 </button>
-<button class="requirement-card" data-preset="photo-200-230-50" data-ready-for="Bank exam form" data-requirement="ibps sbi po bank exam banking" type="button">
+<button class="requirement-card" data-category="exams" data-preset="photo-200-230-50" data-ready-for="Bank exam form" data-requirement="ibps sbi po bank exam banking" type="button">
 <span aria-hidden="true" class="requirement-icon">🏦</span>
 <span><strong>IBPS / SBI form</strong><small>200 × 230 px · under 50 KB</small></span>
 </button>
-<button class="requirement-card" data-preset="photo-200-230-50" data-ready-for="Railway recruitment form" data-requirement="railway rrb recruitment exam" type="button">
+<button class="requirement-card" data-category="exams" data-preset="photo-200-230-50" data-ready-for="Railway recruitment form" data-requirement="railway rrb recruitment exam" type="button">
 <span aria-hidden="true" class="requirement-icon">🚆</span>
 <span><strong>Railway / RRB form</strong><small>200 × 230 px · under 50 KB</small></span>
 </button>
-<button class="requirement-card" data-preset="photo-300-400-100" data-ready-for="Entrance exam form" data-requirement="cuet gate cat entrance exam" type="button">
+<button class="requirement-card" data-category="exams" data-preset="photo-300-400-100" data-ready-for="Entrance exam form" data-requirement="cuet gate cat entrance exam" type="button">
 <span aria-hidden="true" class="requirement-icon">📝</span>
 <span><strong>CUET / GATE / CAT</strong><small>300 × 400 px · under 100 KB</small></span>
 </button>
-<button class="requirement-card" data-preset="photo-300-400-100" data-ready-for="College admission" data-requirement="college admission university" type="button">
+<button class="requirement-card" data-category="professional" data-preset="photo-300-400-100" data-ready-for="College admission" data-requirement="college admission university" type="button">
 <span aria-hidden="true" class="requirement-icon">🏫</span>
 <span><strong>College admission</strong><small>300 × 400 px · under 100 KB</small></span>
 </button>
-<button class="requirement-card" data-preset="photo-600-600-200" data-ready-for="Job application" data-requirement="job employment application profile resume" type="button">
+<button class="requirement-card" data-category="professional" data-preset="photo-600-600-200" data-ready-for="Job application" data-requirement="job employment application profile resume" type="button">
 <span aria-hidden="true" class="requirement-icon">💼</span>
 <span><strong>Job application</strong><small>600 × 600 px · under 200 KB</small></span>
 </button>
-<button class="requirement-card" data-preset="photo-300-400-100" data-ready-for="ID document photo" data-requirement="pan aadhaar voter id driving licence identity card" type="button">
+<button class="requirement-card" data-category="ids" data-preset="photo-300-400-100" data-ready-for="ID document photo" data-requirement="pan aadhaar voter id driving licence identity card" type="button">
 <span aria-hidden="true" class="requirement-icon">🪪</span>
 <span><strong>ID document photo</strong><small>300 × 400 px · under 100 KB</small></span>
 </button>
-<button class="requirement-card popular" data-preset="signature-140-60-20" data-ready-for="Small signature" data-requirement="signature sign 20kb small" type="button">
+<button class="requirement-card popular" data-category="signature" data-preset="signature-140-60-20" data-ready-for="Small signature" data-requirement="signature sign 20kb small" type="button">
 <span aria-hidden="true" class="requirement-icon">✍️</span>
 <span><strong>Small signature</strong><small>140 × 60 px · under 20 KB</small></span>
 </button>
@@ -221,14 +230,13 @@
 <div><span>Maximum size</span><strong id="requirementDetailSize">50 KB</strong></div>
 <div><span>Format</span><strong id="requirementDetailFormat">JPG</strong></div>
 <div><span>Background</span><strong id="requirementDetailBackground">White</strong></div>
-</div>
+<div><span>Category</span><strong id="requirementDetailCategory">General</strong></div><div><span>Updated</span><strong id="requirementDetailUpdated">July 2026</strong></div></div>
 <p id="requirementDetailNote">Practical starting settings. Confirm the exact requirement on the official portal.</p>
-<div class="requirement-detail-actions">
+<div class="requirement-detail-actions"><button aria-pressed="false" class="btn btn-secondary favorite-requirement-btn" id="favoriteRequirementBtn" type="button">☆ Add Favorite</button>
 <button class="btn btn-secondary" id="copySettingsBtn" type="button">Copy Settings</button>
 <button class="btn btn-danger" id="clearToolBtn" type="button">Clear All</button>
 </div>
 </aside>
-
 </section>
 <div class="quick-preset-box">
 <h3>Quick Form Presets</h3>
@@ -388,6 +396,20 @@
 </div>
 <p class="validation-disclaimer">This is an automated visual-quality estimate, not an official portal approval or face-detection check.</p>
 </section>
+<section aria-live="polite" class="success-panel" hidden="" id="successPanel">
+<div aria-hidden="true" class="success-mark">✓</div>
+<div class="success-copy">
+<span class="result-label">Processing complete</span>
+<h3>Your image is ready</h3>
+<p id="successPanelText">The resized image and validation report are ready to review.</p>
+</div>
+<div class="success-actions">
+<button class="btn btn-primary" id="successDownloadBtn" type="button">Download Image</button>
+<button class="btn btn-secondary" id="successCopyBtn" type="button">Copy Settings</button>
+<button class="btn btn-secondary" id="successAnotherBtn" type="button">Try Another Requirement</button>
+</div>
+</section>
+
 <div class="after-download-actions" hidden="" id="afterDownloadActions">
 <p>Done? Share this free tool with a friend who fills online forms.</p>
 <button class="btn btn-secondary" id="copyLinkBtn" type="button">Copy Website Link</button>

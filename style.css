@@ -1504,3 +1504,48 @@ details p,
 .requirement-details{background:linear-gradient(135deg,rgba(15,122,229,.08),rgba(16,185,129,.07)),var(--surface)}.requirement-details-head h3{margin-top:4px}.dataset-badge{padding:6px 9px;border-radius:999px;background:#e0f2fe;color:var(--primary);font-size:.78rem;font-weight:900;white-space:nowrap}.requirement-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.requirement-detail-grid>div{padding:12px;border-radius:13px;background:var(--surface);border:1px solid var(--border)}.requirement-detail-grid span{display:block;color:var(--muted);font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.requirement-detail-grid strong{display:block;margin-top:3px}.requirement-details p{color:var(--muted);font-size:.9rem}.requirement-detail-actions{display:flex;flex-wrap:wrap;gap:10px}.requirement-detail-actions .btn{min-height:42px;padding:9px 14px}
 @media(max-width:560px){.hero-product-image{width:min(100%,520px);border-radius:22px}.requirement-detail-grid{grid-template-columns:1fr}.requirement-detail-actions .btn{width:100%}.requirement-details-head{align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:reduce){.hero-product-image{transition:none}.hero-product-image:hover{transform:none}}
+
+
+/* FormPhotoFit v2.2.1 — finished requirement center and validation dashboard */
+.requirement-category-filters {
+  display: flex; flex-wrap: wrap; gap: 9px; margin: 16px 0;
+}
+.category-filter {
+  border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+  border-radius: 999px; padding: 9px 13px; font-weight: 800; cursor: pointer;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+}
+.category-filter:hover, .category-filter.active {
+  transform: translateY(-1px); border-color: var(--primary); color: var(--primary); background: #e8f4ff;
+}
+.requirement-card.is-favorite::after {
+  content: "★"; margin-left: auto; color: #f59e0b; font-size: 1.05rem;
+}
+.favorite-requirement-btn[aria-pressed="true"] { border-color: #f59e0b; color: #92400e; background: #fef3c7; }
+.requirement-details {
+  position: relative; overflow: hidden;
+  background: linear-gradient(145deg, rgba(15,122,229,.09), rgba(16,185,129,.07)), var(--surface);
+}
+.requirement-details::before {
+  content:""; position:absolute; inset:0 auto 0 0; width:5px; background:linear-gradient(var(--primary),var(--accent));
+}
+.requirement-detail-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.requirement-detail-grid > div { background: color-mix(in srgb, var(--surface) 86%, transparent); border:1px solid var(--border); }
+.validation-report {
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
+  background: radial-gradient(circle at top right, rgba(16,185,129,.10), transparent 38%), var(--surface);
+}
+.validation-score { min-width: 104px; min-height: 104px; border-radius: 50%; display:grid; place-content:center; text-align:center;
+  background: conic-gradient(var(--accent) var(--validation-score-angle, 0deg), var(--surface-soft) 0); position:relative; }
+.validation-score::before { content:""; position:absolute; inset:8px; border-radius:50%; background:var(--surface); }
+.validation-score strong,.validation-score span { position:relative; z-index:1; }
+.validation-item { border:1px solid var(--border); transition: transform .18s ease, box-shadow .18s ease; }
+.validation-item:hover { transform:translateY(-2px); box-shadow:0 12px 25px rgba(15,23,42,.08); }
+.success-panel { margin-top:18px; padding:20px; border-radius:var(--radius); border:1px solid #86efac;
+  background:linear-gradient(135deg,#ecfdf5,#eff6ff); display:grid; grid-template-columns:auto 1fr; gap:14px; align-items:center; }
+.success-panel[hidden] { display:none; }
+.success-mark { width:52px; height:52px; border-radius:17px; display:grid; place-items:center; background:#16a34a; color:#fff; font-size:1.55rem; font-weight:900; }
+.success-copy p { margin:7px 0 0; color:var(--muted); }
+.success-actions { grid-column:1/-1; display:flex; flex-wrap:wrap; gap:10px; }
+@media(max-width:560px){ .requirement-category-filters{display:grid;grid-template-columns:1fr 1fr}.category-filter{width:100%}.requirement-detail-grid{grid-template-columns:1fr}.success-actions .btn{width:100%} }
+@media(prefers-color-scheme:dark){ .category-filter:hover,.category-filter.active{background:#0b2948}.success-panel{background:linear-gradient(135deg,#052e24,#0b2948)} }

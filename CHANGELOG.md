@@ -1,8 +1,8 @@
-# FormPhotoFit v2.2
+# FormPhotoFit v2.2.1
 
-- Added popular requirement shortcuts.
-- Added recently used requirements stored locally in the browser.
-- Added requirement details with dimensions, size, format, and background.
-- Added Copy Settings and Clear All actions.
-- Replaced the placeholder hero mockup with a polished product illustration.
-- Preserved validation engine, compression, privacy, and analytics.
+- Added category filters for exams, IDs, passport/visa, professional and signatures.
+- Added browser-saved favorite requirements.
+- Upgraded requirement details with category and dataset date.
+- Redesigned validation score and quality cards.
+- Added a finished success panel with download, copy settings and try-another actions.
+- Preserved the validator, recent requirements, compression, analytics and accessibility.

@@ -1037,3 +1037,85 @@ if (clearToolBtn) clearToolBtn.addEventListener("click", () => {
 });
 
 renderRecentRequirements();
+
+
+// FormPhotoFit v2.2.1 — category filters, favorites, finished success flow
+const requirementCategoryFilters = document.querySelectorAll('.category-filter');
+const favoriteRequirementBtn = document.getElementById('favoriteRequirementBtn');
+const requirementDetailCategory = document.getElementById('requirementDetailCategory');
+const requirementDetailUpdated = document.getElementById('requirementDetailUpdated');
+const successPanel = document.getElementById('successPanel');
+const successPanelText = document.getElementById('successPanelText');
+const successDownloadBtn = document.getElementById('successDownloadBtn');
+const successCopyBtn = document.getElementById('successCopyBtn');
+const successAnotherBtn = document.getElementById('successAnotherBtn');
+const FAVORITES_KEY = 'formphotofit_favorite_requirements_v1';
+let activeRequirementCategory = 'all';
+let currentRequirementCard = null;
+
+function readFavoriteRequirements(){ try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; } }
+function writeFavoriteRequirements(items){ try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(items)); } catch {} }
+function requirementKey(card){ return card?.dataset.requirement || card?.dataset.readyFor || ''; }
+function refreshFavoriteUI(){
+  const favorites = readFavoriteRequirements();
+  requirementCards.forEach(card => card.classList.toggle('is-favorite', favorites.includes(requirementKey(card))));
+  if (favoriteRequirementBtn) {
+    const selected = currentRequirementCard && favorites.includes(requirementKey(currentRequirementCard));
+    favoriteRequirementBtn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    favoriteRequirementBtn.textContent = selected ? '★ Favorited' : '☆ Add Favorite';
+    favoriteRequirementBtn.disabled = !currentRequirementCard;
+  }
+}
+function applyRequirementFilters(){
+  const query = requirementSearch?.value.trim().toLowerCase() || '';
+  const favorites = readFavoriteRequirements();
+  let visible = 0;
+  requirementCards.forEach(card => {
+    const searchText = `${card.dataset.requirement || ''} ${card.textContent}`.toLowerCase();
+    const searchMatch = !query || searchText.includes(query);
+    const categoryMatch = activeRequirementCategory === 'all' ||
+      (activeRequirementCategory === 'favorites' ? favorites.includes(requirementKey(card)) : card.dataset.category === activeRequirementCategory);
+    card.hidden = !(searchMatch && categoryMatch);
+    if (!card.hidden) visible += 1;
+  });
+  requirementSearch?.setAttribute('aria-label', `${visible} requirements found`);
+}
+requirementCategoryFilters.forEach(button => button.addEventListener('click', () => {
+  activeRequirementCategory = button.dataset.category;
+  requirementCategoryFilters.forEach(item => { const on = item === button; item.classList.toggle('active', on); item.setAttribute('aria-pressed', on ? 'true':'false'); });
+  applyRequirementFilters();
+}));
+requirementSearch?.addEventListener('input', applyRequirementFilters);
+requirementCards.forEach(card => card.addEventListener('click', () => {
+  currentRequirementCard = card;
+  const label = card.querySelector('strong')?.textContent || 'Requirement';
+  if (requirementDetailCategory) requirementDetailCategory.textContent = ({exams:'Indian Exam',ids:'Government ID',international:'Passport / Visa',professional:'Professional',signature:'Signature'})[card.dataset.category] || 'General';
+  if (requirementDetailUpdated) requirementDetailUpdated.textContent = 'July 2026';
+  refreshFavoriteUI();
+}));
+favoriteRequirementBtn?.addEventListener('click', () => {
+  if (!currentRequirementCard) return;
+  const key = requirementKey(currentRequirementCard); let favorites = readFavoriteRequirements();
+  favorites = favorites.includes(key) ? favorites.filter(item => item !== key) : [...favorites, key].slice(-20);
+  writeFavoriteRequirements(favorites); refreshFavoriteUI(); applyRequirementFilters();
+  setStatus(favorites.includes(key) ? 'Requirement added to favorites.' : 'Requirement removed from favorites.', 'success');
+});
+
+function showFinishedSuccessPanel(){
+  if (!successPanel) return;
+  successPanel.hidden = false;
+  if (successPanelText) successPanelText.textContent = `${state.activeRequirement || 'Selected requirement'} settings are applied. Review the validation report, then download your image.`;
+  const scoreNumber = Number(validationScore?.textContent || 0);
+  const scoreCircle = validationScore?.closest('.validation-score');
+  if (scoreCircle) scoreCircle.style.setProperty('--validation-score-angle', `${Math.max(0,Math.min(100,scoreNumber))*3.6}deg`);
+}
+successDownloadBtn?.addEventListener('click', downloadImage);
+successCopyBtn?.addEventListener('click', () => copySettingsBtn?.click());
+successAnotherBtn?.addEventListener('click', () => { requirementSearch?.focus(); document.querySelector('.requirement-finder')?.scrollIntoView({behavior:'smooth',block:'start'}); });
+
+// hook into existing output/clear functions without replacing stable logic
+const originalUpdateOutputV221 = updateOutput;
+updateOutput = function(...args){ const result = originalUpdateOutputV221.apply(this,args); window.setTimeout(showFinishedSuccessPanel,60); return result; };
+const originalClearResultV221 = clearResult;
+clearResult = function(...args){ const result = originalClearResultV221.apply(this,args); if(successPanel) successPanel.hidden = true; return result; };
+refreshFavoriteUI();
