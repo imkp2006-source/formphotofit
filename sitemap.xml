@@ -1,30 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-  <url>
-    <loc>https://formphotofit.com/</loc>
-    <priority>1.00</priority>
-  </url>
-
-  <url>
-    <loc>https://formphotofit.com/about.html</loc>
-    <priority>0.60</priority>
-  </url>
-
-  <url>
-    <loc>https://formphotofit.com/contact.html</loc>
-    <priority>0.60</priority>
-  </url>
-
-  <url>
-    <loc>https://formphotofit.com/privacy.html</loc>
-    <priority>0.60</priority>
-  </url>
-
-  <url>
-    <loc>https://formphotofit.com/terms.html</loc>
-    <priority>0.60</priority>
-  </url>
-
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://formphotofit.com/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://formphotofit.com/passport-photo-resizer.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://formphotofit.com/photo-under-20kb.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://formphotofit.com/photo-under-50kb.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://formphotofit.com/photo-under-100kb.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://formphotofit.com/signature-resizer.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://formphotofit.com/about.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://formphotofit.com/privacy.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://formphotofit.com/terms.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://formphotofit.com/contact.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>
