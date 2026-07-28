@@ -1,11 +1,10 @@
-# FormPhotoFit v2.2.1
+# ReelCoverFit v2.4.1
 
-- Added category filters for exams, IDs, passport/visa, professional and signatures.
-- Added browser-saved favorite requirements.
-- Upgraded requirement details with category and dataset date.
-- Redesigned validation score and quality cards.
-- Added a finished success panel with download, copy settings and try-another actions.
-- Preserved the validator, recent requirements, compression, analytics and accessibility.
+- Redesigned Creator Report with stars and clear readiness badges.
+- Upgraded checklist cards and thumbnail analyzer presentation.
+- Added a richer upload empty state explaining the checks.
+- Polished multi-platform tabs and switching animation.
+- Preserved manual crop, zoom, overlays, analyzer, multi-preview, analytics and accessibility.
 
 
 ## Final Growth Edition

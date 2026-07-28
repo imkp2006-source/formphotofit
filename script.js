@@ -1,1121 +1,1266 @@
-const MAX_FILE_SIZE = 12 * 1024 * 1024;
-
-const presets = {
-    "photo-200-230-50": {
-        mode: "photo",
-        width: 200,
-        height: 230,
-        kb: 50,
-        format: "image/jpeg",
-        fit: "cover",
-        whiteBg: true
-    },
-    "photo-300-400-100": {
-        mode: "photo",
-        width: 300,
-        height: 400,
-        kb: 100,
-        format: "image/jpeg",
-        fit: "cover",
-        whiteBg: true
-    },
-    "photo-600-600-200": {
-        mode: "photo",
-        width: 600,
-        height: 600,
-        kb: 200,
-        format: "image/jpeg",
-        fit: "cover",
-        whiteBg: true
-    },
-    "signature-140-60-20": {
-        mode: "signature",
-        width: 140,
-        height: 60,
-        kb: 20,
-        format: "image/png",
-        fit: "contain",
-        whiteBg: true
-    },
-    "signature-300-100-50": {
-        mode: "signature",
-        width: 300,
-        height: 100,
-        kb: 50,
-        format: "image/png",
-        fit: "contain",
-        whiteBg: true
-    }
-};
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const TARGET_WIDTH = 1080;
+const TARGET_HEIGHT = 1920;
+const TARGET_RATIO = 9 / 16;
+const RATIO_TOLERANCE = 0.03;
 
 const state = {
-    image: null,
-    fileName: "",
-    resultBlob: null,
-    resultUrl: "",
-    resultMime: "image/jpeg",
-    activeRequirement: "General online form"
+  image: null,
+  fileName: "",
+  showSafeZone: true,
+  showGridPreview: true,
+  cropZoom: 1,
+  cropOffsetX: 0,
+  cropOffsetY: 0,
+  isDragging: false,
+  showRuleOfThirds: true,
+  showFaceGuide: true,
+  snapToCenter: true
 };
 
 const imageInput = document.getElementById("imageInput");
 const dropZone = document.getElementById("dropZone");
 const statusMessage = document.getElementById("statusMessage");
-const toastMessage = document.getElementById("toastMessage");
+const dimensionResult = document.getElementById("dimensionResult");
+const ratioResult = document.getElementById("ratioResult");
+const recommendationText = document.getElementById("recommendationText");
+const creatorScoreValue = document.getElementById("creatorScoreValue");
+const creatorScoreLabel = document.getElementById("creatorScoreLabel");
+const creatorScoreBar = document.getElementById("creatorScoreBar");
+const smartAdviceList = document.getElementById("smartAdviceList");
+const scoreRatio = document.getElementById("scoreRatio");
+const scoreResolution = document.getElementById("scoreResolution");
+const scoreSafeZone = document.getElementById("scoreSafeZone");
+const scoreGrid = document.getElementById("scoreGrid");
 
-const originalSize = document.getElementById("originalSize");
-const originalDimensions = document.getElementById("originalDimensions");
+const reelCanvas = document.getElementById("reelCanvas");
+const reelCtx = reelCanvas ? reelCanvas.getContext("2d") : null;
+const gridCanvas = document.getElementById("gridCanvas");
+const gridCtx = gridCanvas ? gridCanvas.getContext("2d") : null;
 
-const modeSelect = document.getElementById("modeSelect");
-const presetSelect = document.getElementById("presetSelect");
-const targetWidth = document.getElementById("targetWidth");
-const targetHeight = document.getElementById("targetHeight");
-const targetKB = document.getElementById("targetKB");
-const formatSelect = document.getElementById("formatSelect");
-const backgroundColorInput = document.getElementById("backgroundColor");
-const quickPresetButtons = document.querySelectorAll(".quick-preset-btn");
-const bgOptions = document.querySelectorAll(".bg-option");
-const afterDownloadActions = document.getElementById("afterDownloadActions");
-const copyLinkBtn = document.getElementById("copyLinkBtn");
-const fitSelect = document.getElementById("fitSelect");
-const advancedSettings = document.getElementById("advancedSettings");
-const requirementSearch = document.getElementById("requirementSearch");
-const requirementCards = document.querySelectorAll(".requirement-card");
-const requirementApplied = document.getElementById("requirementApplied");
-const requirementAppliedTitle = document.getElementById("requirementAppliedTitle");
-const requirementAppliedDetails = document.getElementById("requirementAppliedDetails");
+const emptyPreview = document.getElementById("emptyPreview");
+const emptyGridPreview = document.getElementById("emptyGridPreview");
+const gridPreviewCard = document.getElementById("gridPreviewCard");
 
-const processBtn = document.getElementById("processBtn");
+const toggleSafeBtn = document.getElementById("toggleSafeBtn");
+const toggleGridBtn = document.getElementById("toggleGridBtn");
 const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn = document.getElementById("resetBtn");
-
-const previewCanvas = document.getElementById("previewCanvas");
-const previewCtx = previewCanvas.getContext("2d");
-const emptyPreview = document.getElementById("emptyPreview");
-const previewTag = document.getElementById("previewTag");
-
-const outputSize = document.getElementById("outputSize");
-const outputDimensions = document.getElementById("outputDimensions");
-const outputFormat = document.getElementById("outputFormat");
-const outputStatus = document.getElementById("outputStatus");
-const outputNote = document.getElementById("outputNote");
-const outputReadyFor = document.getElementById("outputReadyFor");
-const processProgress = document.getElementById("processProgress");
-const processProgressLabel = document.getElementById("processProgressLabel");
-const processProgressPercent = document.getElementById("processProgressPercent");
-const processProgressBar = document.getElementById("processProgressBar");
-const processStepLabels = document.querySelectorAll(".process-steps span");
-const validationReport = document.getElementById("validationReport");
-const validationScore = document.getElementById("validationScore");
-const validationScoreBar = document.getElementById("validationScoreBar");
-const validationSummary = document.getElementById("validationSummary");
-const validationAdvice = document.getElementById("validationAdvice");
-const validationItems = {
-    dimensions: document.getElementById("validationDimensions"),
-    fileSize: document.getElementById("validationFileSize"),
-    brightness: document.getElementById("validationBrightness"),
-    contrast: document.getElementById("validationContrast"),
-    sharpness: document.getElementById("validationSharpness"),
-    background: document.getElementById("validationBackground")
+const zoomRange = document.getElementById("zoomRange");
+const zoomValue = document.getElementById("zoomValue");
+const resetCropBtn = document.getElementById("resetCropBtn");
+const toggleThirdsBtn = document.getElementById("toggleThirdsBtn");
+const toggleFaceGuideBtn = document.getElementById("toggleFaceGuideBtn");
+const toggleSnapBtn = document.getElementById("toggleSnapBtn");
+const thumbnailAnalyzer = document.getElementById("thumbnailAnalyzer");
+const analyzerSummary = document.getElementById("analyzerSummary");
+const analyzerOverall = document.getElementById("analyzerOverall");
+const analyzerOverallBar = document.getElementById("analyzerOverallBar");
+const analyzerSuggestions = document.getElementById("analyzerSuggestions");
+const analyzerMetrics = {
+  contrast: [document.getElementById("metricContrast"), document.getElementById("metricContrastNote")],
+  brightness: [document.getElementById("metricBrightness"), document.getElementById("metricBrightnessNote")],
+  sharpness: [document.getElementById("metricSharpness"), document.getElementById("metricSharpnessNote")],
+  resolution: [document.getElementById("metricResolution"), document.getElementById("metricResolutionNote")],
+  crop: [document.getElementById("metricCrop"), document.getElementById("metricCropNote")],
+  safety: [document.getElementById("metricSafety"), document.getElementById("metricSafetyNote")]
 };
 
-dropZone.addEventListener("click", () => imageInput.click());
+function trackEvent(eventName, eventParams = {}) {
+  if (typeof window.gtag === "function") {
+    gtag("event", eventName, {
+      tool_name: "reelcoverfit",
+      page_path: window.location.pathname,
+      ...eventParams
+    });
+  }
+}
 
-dropZone.addEventListener("keydown", (event) => {
+function getFileSizeBucket(size) {
+  if (size < 500 * 1024) return "under_500kb";
+  if (size < 2 * 1024 * 1024) return "500kb_to_2mb";
+  if (size < 5 * 1024 * 1024) return "2mb_to_5mb";
+  return "5mb_to_10mb";
+}
+
+function setupClickTracking() {
+  document.querySelectorAll("[data-track]").forEach((element) => {
+    element.addEventListener("click", () => {
+      trackEvent(element.dataset.track, {
+        link_text: element.textContent.trim().slice(0, 80),
+        link_url: element.getAttribute("href") || ""
+      });
+    });
+  });
+}
+
+setupClickTracking();
+
+if (dropZone && imageInput) {
+  dropZone.addEventListener("click", () => imageInput.click());
+
+  dropZone.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        imageInput.click();
+      event.preventDefault();
+      imageInput.click();
     }
-});
+  });
 
-imageInput.addEventListener("change", (event) => {
+  imageInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
-    if (file) handleImageFile(file);
-});
+    if (file) handleImageFile(file, "file_picker");
+  });
 
-["dragenter", "dragover"].forEach((eventName) => {
+  ["dragenter", "dragover"].forEach((eventName) => {
     dropZone.addEventListener(eventName, (event) => {
-        event.preventDefault();
-        dropZone.classList.add("drag-over");
+      event.preventDefault();
+      dropZone.classList.add("drag-over");
     });
-});
+  });
 
-["dragleave", "drop"].forEach((eventName) => {
+  ["dragleave", "drop"].forEach((eventName) => {
     dropZone.addEventListener(eventName, (event) => {
-        event.preventDefault();
-        dropZone.classList.remove("drag-over");
+      event.preventDefault();
+      dropZone.classList.remove("drag-over");
     });
-});
+  });
 
-dropZone.addEventListener("drop", (event) => {
+  dropZone.addEventListener("drop", (event) => {
     const file = event.dataTransfer.files[0];
-    if (file) handleImageFile(file);
-});
+    if (file) handleImageFile(file, "drag_drop");
+  });
+}
 
-presetSelect.addEventListener("change", applyPreset);
-modeSelect.addEventListener("change", applyModeDefaults);
-processBtn.addEventListener("click", processImage);
-downloadBtn.addEventListener("click", downloadImage);
-resetBtn.addEventListener("click", resetTool);
-
-quickPresetButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-        const presetValue = button.dataset.preset;
-
-        if (presetSelect) {
-            presetSelect.value = presetValue;
-            applyPreset();
-        }
-
-        state.activeRequirement = getPresetReadyFor(presetValue);
-        updateActivePresetChip(presetValue);
-        trackFormPhotoEvent("quick_preset_selected", { preset: presetValue });
+if (toggleSafeBtn) {
+  toggleSafeBtn.addEventListener("click", () => {
+    state.showSafeZone = !state.showSafeZone;
+    toggleSafeBtn.textContent = state.showSafeZone ? "Hide Safe Zone" : "Show Safe Zone";
+    toggleSafeBtn.setAttribute("aria-pressed", state.showSafeZone ? "true" : "false");
+    drawReelPreview();
+    refreshCreatorScore();
+    updateThumbnailAnalyzer();
+    trackEvent("safe_zone_toggle", {
+      safe_zone_visible: state.showSafeZone ? "yes" : "no"
     });
-});
+  });
+}
 
-requirementCards.forEach((card) => {
-    card.addEventListener("click", () => {
-        const presetValue = card.dataset.preset;
-        const title = card.querySelector("strong")?.textContent || "Requirement";
-        const details = card.querySelector("small")?.textContent || "Preset applied";
-
-        requirementCards.forEach((item) => {
-            const isActive = item === card;
-            item.classList.toggle("active", isActive);
-            item.setAttribute("aria-pressed", isActive ? "true" : "false");
-        });
-
-        state.activeRequirement = card.dataset.readyFor || title;
-        presetSelect.value = presetValue;
-        applyPreset();
-        showRequirementApplied(title, details);
-        trackFormPhotoEvent("requirement_selected", {
-            requirement: card.dataset.requirement,
-            preset: presetValue
-        });
+if (toggleGridBtn && gridPreviewCard) {
+  toggleGridBtn.addEventListener("click", () => {
+    state.showGridPreview = !state.showGridPreview;
+    toggleGridBtn.textContent = state.showGridPreview ? "Hide Grid Preview" : "Show Grid Preview";
+    toggleGridBtn.setAttribute("aria-pressed", state.showGridPreview ? "true" : "false");
+    gridPreviewCard.style.display = state.showGridPreview ? "block" : "none";
+    refreshCreatorScore();
+    updateThumbnailAnalyzer();
+    trackEvent("grid_preview_toggle", {
+      grid_preview_visible: state.showGridPreview ? "yes" : "no"
     });
-});
+  });
+}
 
-if (requirementSearch) {
-    requirementSearch.addEventListener("input", () => {
-        const query = requirementSearch.value.trim().toLowerCase();
-        let visibleCount = 0;
+if (downloadBtn) {
+  downloadBtn.addEventListener("click", downloadPreview);
+}
 
-        requirementCards.forEach((card) => {
-            const searchableText = `${card.dataset.requirement || ""} ${card.textContent}`.toLowerCase();
-            const isVisible = !query || searchableText.includes(query);
-            card.hidden = !isVisible;
-            if (isVisible) visibleCount += 1;
-        });
+if (resetBtn) {
+  resetBtn.addEventListener("click", resetTool);
+}
 
-        requirementSearch.setAttribute(
-            "aria-label",
-            visibleCount === 1 ? "1 requirement found" : `${visibleCount} requirements found`
-        );
+setupCropControls();
+
+function handleImageFile(file, uploadMethod = "unknown") {
+  trackEvent("image_upload", {
+    upload_method: uploadMethod,
+    file_type: file.type || "unknown",
+    file_size_bucket: getFileSizeBucket(file.size)
+  });
+
+  if (!file.type.startsWith("image/")) {
+    setStatus("Please upload a valid image file.", "error");
+    trackEvent("image_upload_error", { error_reason: "invalid_file_type" });
+    return;
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    setStatus("This image is too large. Please upload an image under 10 MB.", "error");
+    trackEvent("image_upload_error", { error_reason: "file_too_large" });
+    return;
+  }
+
+  setStatus("Loading your image...", "warning");
+
+  const imageUrl = URL.createObjectURL(file);
+  const image = new Image();
+
+  image.onload = () => {
+    URL.revokeObjectURL(imageUrl);
+
+    state.image = image;
+    state.fileName = file.name;
+    state.showSafeZone = true;
+    state.showGridPreview = true;
+    resetCrop(false);
+
+    const ratioStatus = updateImageInfo(image, file);
+    updateCreatorScore(image, ratioStatus);
+    updateThumbnailAnalyzer();
+    showToolControls();
+    drawReelPreview();
+    drawGridPreview();
+    drawSurfacePreview();
+
+    setStatus("Image loaded. Drag inside the Reel preview to position it, then adjust zoom if needed.", "success");
+
+    trackEvent("cover_checked", {
+      image_width: image.naturalWidth,
+      image_height: image.naturalHeight,
+      ratio_status: ratioStatus
     });
+  };
+
+  image.onerror = () => {
+    URL.revokeObjectURL(imageUrl);
+    setStatus("Could not load this image. Please try a different file.", "error");
+    trackEvent("image_upload_error", { error_reason: "image_load_failed" });
+  };
+
+  image.src = imageUrl;
 }
 
-bgOptions.forEach((button) => {
-    button.addEventListener("click", () => {
-        setBackgroundOption(button.dataset.bg);
-        clearResult();
-    });
-});
+function updateImageInfo(image, file) {
+  if (!dimensionResult || !ratioResult || !recommendationText || !statusMessage) return "unknown";
 
-if (copyLinkBtn) {
-    copyLinkBtn.addEventListener("click", async () => {
-        try {
-            await navigator.clipboard.writeText("https://formphotofit.com/");
-            setStatus("Website link copied.", "success");
-            trackEvent("copy_link_click");
-        } catch {
-            setStatus("Could not copy link. You can manually copy formphotofit.com", "warning");
-        }
-    });
+  const width = image.naturalWidth;
+  const height = image.naturalHeight;
+  const ratio = width / height;
+  const difference = Math.abs(ratio - TARGET_RATIO);
+  let ratioStatus = "good_9_16_fit";
+
+  dimensionResult.textContent = `${width} × ${height}px`;
+
+  if (difference <= RATIO_TOLERANCE) {
+    ratioResult.textContent = "Good 9:16 fit";
+    ratioResult.style.color = "var(--success)";
+    recommendationText.textContent =
+      "Great! Your image is close to 9:16. Now check whether important text, face, or logo stays inside the safe zone.";
+  } else if (ratio > TARGET_RATIO) {
+    ratioStatus = "too_wide";
+    ratioResult.textContent = "Too wide";
+    ratioResult.style.color = "var(--warning)";
+    recommendationText.textContent =
+      "Your image is wider than 9:16. Some left and right parts may be cropped in a vertical Reel preview.";
+  } else {
+    ratioStatus = "too_tall_or_narrow";
+    ratioResult.textContent = "Too tall/narrow";
+    ratioResult.style.color = "var(--warning)";
+    recommendationText.textContent =
+      "Your image is narrower than 9:16. It may need cropping or background filling for a clean Reel preview.";
+  }
+
+  const readableSize = formatFileSize(file.size);
+  statusMessage.textContent = `Loaded: ${file.name} (${readableSize})`;
+  return ratioStatus;
 }
 
-function handleImageFile(file) {
-    if (!file.type.startsWith("image/")) {
-        setStatus("Please upload a valid image file.", "error");
-        return;
-    }
+function showToolControls() {
+  if (reelCanvas) reelCanvas.style.display = "block";
+  if (gridCanvas) gridCanvas.style.display = "block";
+  if (emptyPreview) emptyPreview.style.display = "none";
+  if (emptyGridPreview) emptyGridPreview.style.display = "none";
+  if (gridPreviewCard) gridPreviewCard.style.display = "block";
 
-    if (file.size > MAX_FILE_SIZE) {
-        setStatus("This image is too large. Please upload an image under 12 MB.", "error");
-        return;
-    }
-
-    setStatus("Loading your image...", "warning");
-
-    const imageUrl = URL.createObjectURL(file);
-    const image = new Image();
-
-    image.onload = () => {
-        URL.revokeObjectURL(imageUrl);
-
-        state.image = image;
-        state.fileName = file.name;
-        clearResult();
-
-        originalSize.textContent = formatFileSize(file.size);
-        originalDimensions.textContent = `${image.naturalWidth} × ${image.naturalHeight}px`;
-
-        processBtn.disabled = false;
-        resetBtn.disabled = false;
-
-        setStatus("Image loaded successfully. Choose settings and click Resize & Compress.", "success");
-        trackEvent("image_upload_success", {
-            file_size_kb: Math.round(file.size / 1024),
-            width: image.naturalWidth,
-            height: image.naturalHeight
-        });
-    };
-
-    image.onerror = () => {
-        URL.revokeObjectURL(imageUrl);
-        setStatus("Could not load this image. Please try another file.", "error");
-    };
-
-    image.src = imageUrl;
+  if (toggleSafeBtn) {
+    toggleSafeBtn.disabled = false;
+    toggleSafeBtn.textContent = "Hide Safe Zone";
+    toggleSafeBtn.setAttribute("aria-pressed", "true");
+  }
+  if (toggleGridBtn) {
+    toggleGridBtn.disabled = false;
+    toggleGridBtn.textContent = "Hide Grid Preview";
+    toggleGridBtn.setAttribute("aria-pressed", "true");
+  }
+  if (downloadBtn) downloadBtn.disabled = false;
+  if (resetBtn) resetBtn.disabled = false;
+  if (zoomRange) zoomRange.disabled = false;
+  if (resetCropBtn) resetCropBtn.disabled = false;
+  if (toggleThirdsBtn) toggleThirdsBtn.disabled = false;
+  if (toggleFaceGuideBtn) toggleFaceGuideBtn.disabled = false;
+  if (toggleSnapBtn) toggleSnapBtn.disabled = false;
+  if (reelCanvas) {
+    reelCanvas.classList.add("crop-enabled");
+    reelCanvas.tabIndex = 0;
+  }
 }
 
-function applyPreset() {
-    const selected = presetSelect.value;
+function drawReelPreview() {
+  if (!state.image || !reelCtx || !reelCanvas) return;
 
-    if (selected === "custom") {
-        modeSelect.value = "custom";
-        showAdvancedSettings(true);
-        updateActivePresetChip("custom");
-        clearResult();
-        return;
-    }
+  clearCanvas(reelCtx, reelCanvas);
+  drawImageWithCrop(reelCtx, state.image, TARGET_WIDTH, TARGET_HEIGHT);
 
-    const preset = presets[selected];
-    if (!preset) return;
+  if (state.showSafeZone) {
+    drawSafeZoneOverlay(reelCtx);
+  }
 
-    modeSelect.value = preset.mode;
-    targetWidth.value = preset.width;
-    targetHeight.value = preset.height;
-    targetKB.value = preset.kb;
-    formatSelect.value = preset.format;
-    fitSelect.value = preset.fit;
-    setBackgroundOption(preset.whiteBg ? "#ffffff" : "transparent");
-    showAdvancedSettings(false);
-
-    updateActivePresetChip(selected);
-    clearResult();
+  drawCreatorOverlays(reelCtx);
 }
 
-function applyModeDefaults() {
-    const mode = modeSelect.value;
+function drawGridPreview() {
+  if (!state.image || !gridCtx || !gridCanvas) return;
 
-    if (mode === "photo") {
-        formatSelect.value = "image/jpeg";
-        fitSelect.value = "cover";
-        setBackgroundOption("#ffffff");
-    }
+  clearCanvas(gridCtx, gridCanvas);
 
-    if (mode === "signature") {
-        formatSelect.value = "image/png";
-        fitSelect.value = "contain";
-        setBackgroundOption("#ffffff");
-    }
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = TARGET_WIDTH;
+  tempCanvas.height = TARGET_HEIGHT;
 
-    if (mode === "custom") {
-        presetSelect.value = "custom";
-        showAdvancedSettings(true);
-    } else {
-        showAdvancedSettings(false);
-    }
+  const tempCtx = tempCanvas.getContext("2d");
+  drawImageWithCrop(tempCtx, state.image, TARGET_WIDTH, TARGET_HEIGHT);
 
-    clearResult();
+  const squareSize = TARGET_WIDTH;
+  const sourceX = 0;
+  const sourceY = (TARGET_HEIGHT - squareSize) / 2;
+
+  gridCtx.drawImage(
+    tempCanvas,
+    sourceX,
+    sourceY,
+    squareSize,
+    squareSize,
+    0,
+    0,
+    gridCanvas.width,
+    gridCanvas.height
+  );
+
+  drawGridOverlay(gridCtx);
 }
 
-async function processImage() {
-    if (!state.image) {
-        setStatus("Upload an image before processing.", "error");
-        return;
-    }
+function getCropGeometry(image, canvasWidth, canvasHeight) {
+  const baseScale = Math.max(
+    canvasWidth / image.naturalWidth,
+    canvasHeight / image.naturalHeight
+  );
+  const scale = baseScale * state.cropZoom;
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
 
-    const width = Number(targetWidth.value);
-    const height = Number(targetHeight.value);
-    const kb = Number(targetKB.value);
-    const mimeType = formatSelect.value;
+  const maxOffsetX = Math.max(0, (drawWidth - canvasWidth) / 2);
+  const maxOffsetY = Math.max(0, (drawHeight - canvasHeight) / 2);
 
-    if (!isValidNumber(width, 20, 4000) || !isValidNumber(height, 20, 4000)) {
-        setStatus("Please enter valid width and height between 20 and 4000 pixels.", "error");
-        return;
-    }
+  state.cropOffsetX = clamp(state.cropOffsetX, -maxOffsetX, maxOffsetX);
+  state.cropOffsetY = clamp(state.cropOffsetY, -maxOffsetY, maxOffsetY);
 
-    if (!isValidNumber(kb, 5, 2000)) {
-        setStatus("Please enter a valid target size between 5 KB and 2000 KB.", "error");
-        return;
-    }
+  if (state.snapToCenter) {
+    const snapThreshold = 28;
+    if (Math.abs(state.cropOffsetX) < snapThreshold) state.cropOffsetX = 0;
+    if (Math.abs(state.cropOffsetY) < snapThreshold) state.cropOffsetY = 0;
+  }
 
-    setStatus("Processing image...", "warning");
-    document.body.classList.add("is-processing");
-    processBtn.disabled = true;
-    startProcessProgress();
-
-    try {
-        updateProcessProgress(20, "Preparing image…", "prepare");
-        await nextFrame();
-
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext("2d");
-        drawProcessedImage(ctx, canvas, state.image);
-        updateProcessProgress(48, "Resizing to exact dimensions…", "resize");
-        await nextFrame();
-
-        const resultBlob = await compressCanvas(canvas, mimeType, kb);
-        updateProcessProgress(82, "Optimizing file size…", "compress");
-        await nextFrame();
-
-        state.resultBlob = resultBlob;
-        state.resultMime = mimeType;
-
-        if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
-        state.resultUrl = URL.createObjectURL(resultBlob);
-
-        drawPreview(canvas);
-        updateOutput(resultBlob, width, height, mimeType, kb);
-        generateValidationReport(canvas, resultBlob, width, height, kb);
-
-        downloadBtn.disabled = false;
-        updateProcessProgress(100, "Done — your image is ready.", "done");
-        setStatus("Image resized and compressed successfully.", "success");
-        trackEvent("image_process_success", {
-            mode: modeSelect.value,
-            preset: presetSelect.value,
-            target_kb: kb,
-            output_kb: Math.round(resultBlob.size / 1024),
-            format: readableFormat(mimeType)
-        });
-    } catch (error) {
-        setStatus("Something went wrong while processing. Try different settings.", "error");
-        console.error(error);
-    } finally {
-        document.body.classList.remove("is-processing");
-        processBtn.disabled = false;
-        window.setTimeout(() => {
-            if (processProgress) processProgress.hidden = true;
-        }, 900);
-    }
+  return {
+    x: (canvasWidth - drawWidth) / 2 + state.cropOffsetX,
+    y: (canvasHeight - drawHeight) / 2 + state.cropOffsetY,
+    width: drawWidth,
+    height: drawHeight
+  };
 }
 
-function drawProcessedImage(ctx, canvas, image) {
-    const width = canvas.width;
-    const height = canvas.height;
-    const selectedBackground = backgroundColorInput ? backgroundColorInput.value : "#ffffff";
-    const fitMethod = getFitMethod();
-
-    ctx.clearRect(0, 0, width, height);
-
-    if (selectedBackground !== "transparent") {
-        ctx.fillStyle = selectedBackground;
-        ctx.fillRect(0, 0, width, height);
-    }
-
-    if (fitMethod === "stretch") {
-        ctx.drawImage(image, 0, 0, width, height);
-        return;
-    }
-
-    if (fitMethod === "cover") {
-        drawImageCover(ctx, image, width, height);
-        return;
-    }
-
-    drawImageContain(ctx, image, width, height);
+function drawImageWithCrop(ctx, image, canvasWidth, canvasHeight) {
+  const crop = getCropGeometry(image, canvasWidth, canvasHeight);
+  ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height);
 }
 
-function getFitMethod() {
-    const selected = fitSelect.value;
+function drawSafeZoneOverlay(ctx) {
+  const topUnsafeHeight = 250;
+  const bottomUnsafeHeight = 360;
+  const sideMargin = 110;
 
-    if (selected !== "auto") return selected;
+  ctx.save();
 
-    if (modeSelect.value === "photo") return "cover";
-    if (modeSelect.value === "signature") return "contain";
+  ctx.fillStyle = "rgba(239, 68, 68, 0.24)";
+  ctx.fillRect(0, 0, TARGET_WIDTH, topUnsafeHeight);
+  ctx.fillRect(0, TARGET_HEIGHT - bottomUnsafeHeight, TARGET_WIDTH, bottomUnsafeHeight);
 
-    return "contain";
+  ctx.strokeStyle = "rgba(34, 197, 94, 0.95)";
+  ctx.lineWidth = 8;
+  ctx.setLineDash([28, 18]);
+
+  const safeX = sideMargin;
+  const safeY = topUnsafeHeight;
+  const safeWidth = TARGET_WIDTH - sideMargin * 2;
+  const safeHeight = TARGET_HEIGHT - topUnsafeHeight - bottomUnsafeHeight;
+
+  roundRect(ctx, safeX, safeY, safeWidth, safeHeight, 36);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.fillStyle = "rgba(22, 163, 74, 0.92)";
+  ctx.fillRect(safeX + 22, safeY + 22, 260, 58);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 34px Arial, sans-serif";
+  ctx.fillText("Safe Zone", safeX + 42, safeY + 62);
+
+  ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+  ctx.fillRect(32, 32, 330, 58);
+  ctx.fillRect(32, TARGET_HEIGHT - 92, 430, 58);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 30px Arial, sans-serif";
+  ctx.fillText("Top unsafe area", 52, 70);
+  ctx.fillText("Bottom unsafe area", 52, TARGET_HEIGHT - 54);
+
+  ctx.restore();
 }
 
-function drawImageCover(ctx, image, canvasWidth, canvasHeight) {
-    const imageRatio = image.naturalWidth / image.naturalHeight;
-    const canvasRatio = canvasWidth / canvasHeight;
 
-    let sourceWidth;
-    let sourceHeight;
-    let sourceX;
-    let sourceY;
+function drawCreatorOverlays(ctx) {
+  ctx.save();
 
-    if (imageRatio > canvasRatio) {
-        sourceHeight = image.naturalHeight;
-        sourceWidth = sourceHeight * canvasRatio;
-        sourceX = (image.naturalWidth - sourceWidth) / 2;
-        sourceY = 0;
-    } else {
-        sourceWidth = image.naturalWidth;
-        sourceHeight = sourceWidth / canvasRatio;
-        sourceX = 0;
-        sourceY = (image.naturalHeight - sourceHeight) / 2;
+  if (state.showRuleOfThirds) {
+    ctx.strokeStyle = "rgba(255,255,255,.72)";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([16, 14]);
+    ctx.beginPath();
+    ctx.moveTo(TARGET_WIDTH / 3, 0);
+    ctx.lineTo(TARGET_WIDTH / 3, TARGET_HEIGHT);
+    ctx.moveTo((TARGET_WIDTH / 3) * 2, 0);
+    ctx.lineTo((TARGET_WIDTH / 3) * 2, TARGET_HEIGHT);
+    ctx.moveTo(0, TARGET_HEIGHT / 3);
+    ctx.lineTo(TARGET_WIDTH, TARGET_HEIGHT / 3);
+    ctx.moveTo(0, (TARGET_HEIGHT / 3) * 2);
+    ctx.lineTo(TARGET_WIDTH, (TARGET_HEIGHT / 3) * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  if (state.showFaceGuide) {
+    const centerX = TARGET_WIDTH / 2;
+    const centerY = TARGET_HEIGHT * 0.38;
+    const radiusX = 190;
+    const radiusY = 245;
+
+    ctx.strokeStyle = "rgba(250,204,21,.95)";
+    ctx.lineWidth = 7;
+    ctx.setLineDash([24, 16]);
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = "rgba(15,23,42,.78)";
+    ctx.fillRect(centerX - 150, centerY - radiusY - 72, 300, 52);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 28px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Recommended face area", centerX, centerY - radiusY - 36);
+  }
+
+  if (state.snapToCenter && state.cropOffsetX === 0 && state.cropOffsetY === 0) {
+    ctx.strokeStyle = "rgba(34,197,94,.95)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(TARGET_WIDTH / 2, 0);
+    ctx.lineTo(TARGET_WIDTH / 2, TARGET_HEIGHT);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(22,163,74,.92)";
+    ctx.fillRect(TARGET_WIDTH / 2 - 92, TARGET_HEIGHT / 2 - 28, 184, 56);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 28px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Centered", TARGET_WIDTH / 2, TARGET_HEIGHT / 2 + 10);
+  }
+
+  ctx.restore();
+}
+
+function drawGridOverlay(ctx) {
+  if (!gridCanvas) return;
+
+  ctx.save();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(gridCanvas.width / 3, 0);
+  ctx.lineTo(gridCanvas.width / 3, gridCanvas.height);
+  ctx.moveTo((gridCanvas.width / 3) * 2, 0);
+  ctx.lineTo((gridCanvas.width / 3) * 2, gridCanvas.height);
+  ctx.moveTo(0, gridCanvas.height / 3);
+  ctx.lineTo(gridCanvas.width, gridCanvas.height / 3);
+  ctx.moveTo(0, (gridCanvas.height / 3) * 2);
+  ctx.lineTo(gridCanvas.width, (gridCanvas.height / 3) * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
+  ctx.fillRect(24, 24, 300, 46);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 24px Arial, sans-serif";
+  ctx.fillText("Profile grid crop", 42, 55);
+
+  ctx.restore();
+}
+
+function downloadPreview() {
+  if (!state.image || !reelCanvas) {
+    setStatus("Upload an image before downloading.", "error");
+    return;
+  }
+
+  downloadBtn.disabled = true;
+  downloadBtn.textContent = "Preparing Download…";
+  drawReelPreview();
+
+  reelCanvas.toBlob((blob) => {
+    if (!blob) {
+      setStatus("Could not create the preview image. Please try again.", "error");
+      trackEvent("cover_download_error", { error_reason: "blob_failed" });
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = "Download Instagram-Ready Cover";
+      return;
     }
-
-    ctx.drawImage(
-        image,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
-        0,
-        0,
-        canvasWidth,
-        canvasHeight
-    );
-}
-
-function drawImageContain(ctx, image, canvasWidth, canvasHeight) {
-    const scale = Math.min(
-        canvasWidth / image.naturalWidth,
-        canvasHeight / image.naturalHeight
-    );
-
-    const drawWidth = image.naturalWidth * scale;
-    const drawHeight = image.naturalHeight * scale;
-    const drawX = (canvasWidth - drawWidth) / 2;
-    const drawY = (canvasHeight - drawHeight) / 2;
-
-    ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
-}
-
-async function compressCanvas(canvas, mimeType, targetKBValue) {
-    const targetBytes = targetKBValue * 1024;
-
-    if (mimeType === "image/png") {
-        const pngBlob = await canvasToBlob(canvas, "image/png");
-        return pngBlob;
-    }
-
-    let minQuality = 0.1;
-    let maxQuality = 0.95;
-    let bestBlob = await canvasToBlob(canvas, mimeType, maxQuality);
-
-    for (let i = 0; i < 8; i++) {
-        const quality = (minQuality + maxQuality) / 2;
-        const blob = await canvasToBlob(canvas, mimeType, quality);
-
-        if (blob.size > targetBytes) {
-            maxQuality = quality;
-        } else {
-            bestBlob = blob;
-            minQuality = quality;
-        }
-    }
-
-    if (bestBlob.size > targetBytes) {
-        bestBlob = await canvasToBlob(canvas, mimeType, 0.08);
-    }
-
-    return bestBlob;
-}
-
-function canvasToBlob(canvas, mimeType, quality = 0.92) {
-    return new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-            if (blob) {
-                resolve(blob);
-            } else {
-                reject(new Error("Could not create image blob."));
-            }
-        }, mimeType, quality);
-    });
-}
-
-function drawPreview(sourceCanvas) {
-    previewCanvas.width = sourceCanvas.width;
-    previewCanvas.height = sourceCanvas.height;
-
-    previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-    previewCtx.drawImage(sourceCanvas, 0, 0);
-
-    previewCanvas.style.display = "block";
-    emptyPreview.style.display = "none";
-}
-
-function updateOutput(blob, width, height, mimeType, targetKBValue) {
-    const outputKB = blob.size / 1024;
-    const isUnderTarget = outputKB <= targetKBValue;
-
-    outputSize.textContent = formatFileSize(blob.size);
-    outputDimensions.textContent = `${width} × ${height}px`;
-    outputFormat.textContent = readableFormat(mimeType);
-    previewTag.textContent = `${width} × ${height}`;
-    if (outputReadyFor) outputReadyFor.textContent = state.activeRequirement || "General online form";
-
-    if (isUnderTarget) {
-        outputStatus.textContent = "Under target";
-        outputStatus.style.color = "var(--success)";
-        outputNote.textContent = "Great! Your image is under the selected target file size.";
-    } else {
-        outputStatus.textContent = "Above target";
-        outputStatus.style.color = "var(--warning)";
-
-        if (mimeType === "image/png") {
-            outputNote.textContent =
-                "PNG may not compress under the target KB. Try JPG or WebP if your form allows it.";
-        } else {
-            outputNote.textContent =
-                "The image is still above target. Try smaller dimensions or a lower target size.";
-        }
-    }
-}
-
-function downloadImage() {
-    if (!state.resultBlob || !state.resultUrl) {
-        setStatus("Process an image before downloading.", "error");
-        return;
-    }
-
-    const extension = extensionFromMime(state.resultMime);
-    const cleanName = state.fileName
-        .replace(/\.[^/.]+$/, "")
-        .replace(/\s+/g, "-")
-        .toLowerCase();
 
     const link = document.createElement("a");
-    link.href = state.resultUrl;
-    link.download = `${cleanName || "formphotofit"}-resized.${extension}`;
-    link.click();
+    const cleanName = state.fileName.replace(/\.[^/.]+$/, "").replace(/\s+/g, "-").toLowerCase();
+    const objectUrl = URL.createObjectURL(blob);
 
-
-    setStatus("Image downloaded successfully.", "success");
-
-    if (afterDownloadActions) {
-        afterDownloadActions.hidden = false;
+    if (downloadBtn) {
+      downloadBtn.disabled = true;
+      downloadBtn.textContent = "Downloading…";
     }
 
-    trackFormPhotoEvent("image_download_success", {
-        mode: modeSelect.value,
-        preset: presetSelect.value,
-        format: readableFormat(state.resultMime)
-    });
+    link.download = `${cleanName || "reelcoverfit"}-checked-preview.png`;
+    link.href = objectUrl;
+    link.click();
+
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    setStatus("Preview downloaded successfully.", "success");
+    if (downloadBtn) {
+      downloadBtn.textContent = "Downloaded ✓";
+      window.setTimeout(() => {
+        downloadBtn.textContent = "Download Preview";
+        downloadBtn.disabled = false;
+      }, 1800);
+    }
+    if (shareBox) {
+  shareBox.hidden = false;
+}
 
     downloadBtn.textContent = "Downloaded ✓";
+    window.setTimeout(() => {
+      downloadBtn.disabled = false;
+      downloadBtn.textContent = "Download Instagram-Ready Cover";
+    }, 1800);
 
-    setTimeout(() => {
-        downloadBtn.textContent = "Download";
-    }, 2500);
+    trackEvent("cover_download", {
+      file_name_length: state.fileName.length,
+      safe_zone_visible: state.showSafeZone ? "yes" : "no",
+      rule_of_thirds_visible: state.showRuleOfThirds ? "yes" : "no",
+      face_guide_visible: state.showFaceGuide ? "yes" : "no"
+    });
+  }, "image/png");
 }
 
 function resetTool() {
-    state.image = null;
-    state.fileName = "";
-    clearResult();
+  state.image = null;
+  state.fileName = "";
+  state.showSafeZone = true;
+  state.showGridPreview = true;
+  resetCrop(false);
 
-    imageInput.value = "";
-    originalSize.textContent = "Not uploaded";
-    originalDimensions.textContent = "Not uploaded";
+  if (imageInput) imageInput.value = "";
 
-    processBtn.disabled = true;
-    downloadBtn.disabled = true;
-    resetBtn.disabled = true;
+  if (reelCtx && reelCanvas) clearCanvas(reelCtx, reelCanvas);
+  if (gridCtx && gridCanvas) clearCanvas(gridCtx, gridCanvas);
 
-    setStatus("Upload a photo or signature to start.", "");
+  if (reelCanvas) reelCanvas.style.display = "none";
+  if (gridCanvas) gridCanvas.style.display = "none";
+  if (emptyPreview) emptyPreview.style.display = "block";
+  if (emptyGridPreview) emptyGridPreview.style.display = "block";
+  if (surfaceCanvas) surfaceCanvas.style.display = "none";
+  if (emptySurfacePreview) emptySurfacePreview.style.display = "block";
+  if (gridPreviewCard) gridPreviewCard.style.display = "block";
+
+  if (dimensionResult) dimensionResult.textContent = "Not uploaded";
+  if (ratioResult) {
+    ratioResult.textContent = "Waiting";
+    ratioResult.style.color = "inherit";
+  }
+  if (recommendationText) {
+    recommendationText.textContent =
+      "Tip: Keep important text, face, and logo away from the top and bottom edges.";
+  }
+
+  resetCreatorScore();
+  resetThumbnailAnalyzer();
+
+  if (toggleSafeBtn) {
+    toggleSafeBtn.disabled = true;
+    toggleSafeBtn.setAttribute("aria-pressed", "false");
+  }
+  if (toggleGridBtn) {
+    toggleGridBtn.disabled = true;
+    toggleGridBtn.setAttribute("aria-pressed", "false");
+  }
+  if (downloadBtn) downloadBtn.disabled = true;
+  if (resetBtn) resetBtn.disabled = true;
+  if (zoomRange) zoomRange.disabled = true;
+  if (resetCropBtn) resetCropBtn.disabled = true;
+  [toggleThirdsBtn, toggleFaceGuideBtn, toggleSnapBtn].forEach((button) => {
+    if (!button) return;
+    button.disabled = true;
+    button.classList.add("active");
+    button.setAttribute("aria-pressed", "true");
+  });
+  if (reelCanvas) reelCanvas.classList.remove("crop-enabled", "is-dragging");
+
+  setStatus("Upload an image to start checking.", "");
+  trackEvent("tool_reset");
 }
 
-function clearResult() {
-    if (state.resultUrl) {
-        URL.revokeObjectURL(state.resultUrl);
-    }
-
-    state.resultBlob = null;
-    state.resultUrl = "";
-    state.resultMime = "image/jpeg";
-
-    previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-    previewCanvas.style.display = "none";
-    emptyPreview.style.display = "block";
-
-    outputSize.textContent = "Not ready";
-    outputDimensions.textContent = "Not ready";
-    outputFormat.textContent = "Not ready";
-    outputStatus.textContent = "Waiting";
-    outputStatus.style.color = "inherit";
-    if (outputReadyFor) outputReadyFor.textContent = state.activeRequirement || "Choose a requirement";
-    outputNote.textContent =
-        "Tip: JPG is usually best for photos. PNG is better for signatures but may not compress as much.";
-    previewTag.textContent = "Waiting";
-
-    downloadBtn.disabled = true;
-
-    if (afterDownloadActions) {
-        afterDownloadActions.hidden = true;
-    }
-
-    resetValidationReport();
+function clearCanvas(ctx, canvas) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 function setStatus(message, type) {
-    statusMessage.textContent = message;
-    statusMessage.className = "status-message";
+  if (!statusMessage) return;
 
-    if (type) {
-        statusMessage.classList.add(type);
-    }
+  statusMessage.textContent = message;
+  statusMessage.className = "status-message";
 
-    showToast(message, type);
+  if (type) {
+    statusMessage.classList.add(type);
+  }
 }
 
-function showToast(message, type) {
-    if (!toastMessage) return;
+function updateThumbnailAnalyzer() {
+  if (!state.image || !analyzerOverall) return;
 
-    toastMessage.textContent = message;
-    toastMessage.className = "toast-message";
+  const metrics = analyzeCurrentCrop();
+  const width = state.image.naturalWidth;
+  const height = state.image.naturalHeight;
+  const contrastScore = normalizeScore(metrics.contrast, 18, 72);
+  const brightnessScore = Math.max(0, 100 - Math.abs(metrics.meanBrightness - 135) * 0.85);
+  const sharpnessScore = normalizeScore(metrics.sharpness, 5, 28);
+  const resolutionScore = Math.min(100, Math.round(Math.min(width / TARGET_WIDTH, height / TARGET_HEIGHT) * 100));
+  const cropDistance = Math.min(1, Math.hypot(state.cropOffsetX, state.cropOffsetY) / 650);
+  const cropScore = Math.max(45, Math.round(100 - cropDistance * 38 - (state.cropZoom - 1) * 18));
+  const safetyScore = Math.round((state.showSafeZone ? 45 : 15) + (state.showGridPreview ? 30 : 10) + (state.showRuleOfThirds ? 15 : 5) + (state.showFaceGuide ? 10 : 4));
 
-    if (type) {
-        toastMessage.classList.add(type);
-    }
+  const overall = Math.round(
+    contrastScore * 0.22 +
+    brightnessScore * 0.16 +
+    sharpnessScore * 0.22 +
+    resolutionScore * 0.18 +
+    cropScore * 0.12 +
+    safetyScore * 0.10
+  );
 
-    toastMessage.classList.add("show");
+  analyzerOverall.textContent = String(overall);
+  if (analyzerOverallBar) analyzerOverallBar.style.width = `${overall}%`;
+  if (analyzerSummary) {
+    analyzerSummary.textContent = overall >= 88 ? "Strong technical cover quality." : overall >= 72 ? "Good base with a few improvements available." : overall >= 55 ? "Usable, but review the suggestions below." : "The cover needs technical improvement.";
+  }
 
-    clearTimeout(showToast.timer);
+  setAnalyzerMetric("contrast", contrastScore, contrastScore >= 75 ? "Strong tonal separation" : contrastScore >= 55 ? "Moderate contrast" : "Low contrast may reduce impact");
+  setAnalyzerMetric("brightness", brightnessScore, metrics.meanBrightness < 75 ? "Image appears dark" : metrics.meanBrightness > 205 ? "Highlights may be too bright" : "Brightness is balanced");
+  setAnalyzerMetric("sharpness", sharpnessScore, sharpnessScore >= 75 ? "Details look crisp" : sharpnessScore >= 50 ? "Acceptable detail" : "Image may look soft");
+  setAnalyzerMetric("resolution", resolutionScore, width >= TARGET_WIDTH && height >= TARGET_HEIGHT ? "Meets 1080 × 1920 recommendation" : `${width} × ${height}px source`);
+  setAnalyzerMetric("crop", cropScore, state.cropZoom > 1.8 ? "Heavy zoom may reduce clarity" : Math.abs(state.cropOffsetX) + Math.abs(state.cropOffsetY) < 80 ? "Composition stays near center" : "Manual crop is strongly offset");
+  setAnalyzerMetric("safety", safetyScore, state.showSafeZone && state.showGridPreview ? "Core previews are enabled" : "Turn overlays on for a complete check");
 
-    showToast.timer = setTimeout(() => {
-        toastMessage.classList.remove("show");
-    }, 3000);
-}
+  const suggestions = [];
+  if (contrastScore < 60) suggestions.push("Increase contrast or simplify the background so the subject stands out.");
+  if (metrics.meanBrightness < 75) suggestions.push("Brighten the cover slightly so it remains visible on small screens.");
+  if (metrics.meanBrightness > 205) suggestions.push("Reduce highlights to preserve detail in bright areas.");
+  if (sharpnessScore < 55) suggestions.push("Use a sharper, higher-quality source image.");
+  if (resolutionScore < 75) suggestions.push("Export at 1080 × 1920 px or higher for better clarity.");
+  if (state.cropZoom > 2) suggestions.push("Avoid excessive zoom because it can amplify blur and remove context.");
+  if (!state.showSafeZone) suggestions.push("Enable the safe-zone overlay before final export.");
+  if (!state.showGridPreview) suggestions.push("Enable the grid preview to confirm the center crop.");
 
-function updateActivePresetChip(selectedPreset) {
-    quickPresetButtons.forEach((button) => {
-        const isActive = button.dataset.preset === selectedPreset;
-        button.classList.toggle("active", isActive);
-        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  if (analyzerSuggestions) {
+    analyzerSuggestions.innerHTML = "";
+    (suggestions.length ? suggestions : ["The cover passes the current pixel-level technical checks. Review title placement manually before posting."]).forEach((message) => {
+      const li = document.createElement("li");
+      li.textContent = message;
+      analyzerSuggestions.appendChild(li);
     });
+  }
+
 }
 
-function showRequirementApplied(title, details) {
-    if (!requirementApplied || !requirementAppliedTitle || !requirementAppliedDetails) return;
+function analyzeCurrentCrop() {
+  const sampleCanvas = document.createElement("canvas");
+  sampleCanvas.width = 135;
+  sampleCanvas.height = 240;
+  const ctx = sampleCanvas.getContext("2d", { willReadFrequently: true });
 
-    requirementAppliedTitle.textContent = `${title} preset applied`;
-    requirementAppliedDetails.textContent = `${details}. Verify the official form instructions before submitting.`;
-    requirementApplied.hidden = false;
+  const baseScale = Math.max(TARGET_WIDTH / state.image.naturalWidth, TARGET_HEIGHT / state.image.naturalHeight);
+  const scale = baseScale * state.cropZoom;
+  const fullWidth = state.image.naturalWidth * scale;
+  const fullHeight = state.image.naturalHeight * scale;
+  const drawX = (TARGET_WIDTH - fullWidth) / 2 + state.cropOffsetX;
+  const drawY = (TARGET_HEIGHT - fullHeight) / 2 + state.cropOffsetY;
+  const sx = -drawX / scale;
+  const sy = -drawY / scale;
+  const sw = TARGET_WIDTH / scale;
+  const sh = TARGET_HEIGHT / scale;
 
-    requirementApplied.scrollIntoView({ behavior: "smooth", block: "nearest" });
-}
+  ctx.drawImage(state.image, sx, sy, sw, sh, 0, 0, sampleCanvas.width, sampleCanvas.height);
+  const { data } = ctx.getImageData(0, 0, sampleCanvas.width, sampleCanvas.height);
+  const luminance = new Float32Array(sampleCanvas.width * sampleCanvas.height);
+  let sum = 0;
 
-function showAdvancedSettings(shouldShow) {
-    if (!advancedSettings) return;
-    advancedSettings.hidden = !shouldShow;
-}
+  for (let i = 0, p = 0; i < data.length; i += 4, p += 1) {
+    const value = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+    luminance[p] = value;
+    sum += value;
+  }
 
-function setBackgroundOption(value) {
-    if (backgroundColorInput) {
-        backgroundColorInput.value = value;
+  const mean = sum / luminance.length;
+  let variance = 0;
+  let edges = 0;
+  let edgeCount = 0;
+
+  for (let y = 0; y < sampleCanvas.height; y += 1) {
+    for (let x = 0; x < sampleCanvas.width; x += 1) {
+      const index = y * sampleCanvas.width + x;
+      const value = luminance[index];
+      variance += (value - mean) ** 2;
+      if (x > 0 && y > 0) {
+        edges += Math.abs(value - luminance[index - 1]) + Math.abs(value - luminance[index - sampleCanvas.width]);
+        edgeCount += 2;
+      }
     }
+  }
 
-    bgOptions.forEach((button) => {
-        const isActive = button.dataset.bg === value;
-        button.classList.toggle("active", isActive);
-        button.setAttribute("aria-pressed", isActive ? "true" : "false");
-    });
+  return {
+    meanBrightness: mean,
+    contrast: Math.sqrt(variance / luminance.length),
+    sharpness: edgeCount ? edges / edgeCount : 0
+  };
 }
 
-
-function generateValidationReport(canvas, blob, width, height, targetKBValue) {
-    if (!validationReport) return;
-
-    const metrics = analyzeCanvasQuality(canvas);
-    const sizePass = blob.size <= targetKBValue * 1024;
-    const dimensionsPass = width >= 100 && height >= 60;
-    const brightnessPass = metrics.meanBrightness >= 65 && metrics.meanBrightness <= 225;
-    const contrastPass = metrics.contrast >= 28;
-    const sharpnessPass = metrics.sharpness >= 10;
-    const backgroundPass = metrics.edgeUniformity >= 0.55;
-
-    let score = 100;
-    const advice = [];
-
-    if (!dimensionsPass) { score -= 20; advice.push("Use larger output dimensions when the portal allows it."); }
-    if (!sizePass) { score -= 24; advice.push("Reduce dimensions or choose JPG/WebP to meet the target file size."); }
-    if (!brightnessPass) {
-        score -= 12;
-        advice.push(metrics.meanBrightness < 65 ? "The image looks dark; increase lighting or exposure." : "The image looks very bright; reduce exposure to preserve detail.");
-    }
-    if (!contrastPass) { score -= 12; advice.push("Increase contrast slightly so the subject or signature is clearer."); }
-    if (!sharpnessPass) { score -= 18; advice.push("The image may be soft or blurry; use a sharper original image."); }
-    if (!backgroundPass && modeSelect.value === "photo") { score -= 8; advice.push("The outer edges are visually varied; official photos often work better with a plain background."); }
-
-    score = Math.max(25, Math.min(100, Math.round(score)));
-    validationReport.hidden = false;
-    validationScore.textContent = String(score);
-    validationScoreBar.style.width = `${score}%`;
-    validationSummary.textContent = score >= 90 ? "Excellent technical quality." : score >= 75 ? "Good result with minor improvements possible." : score >= 55 ? "Usable, but review the warnings below." : "Needs improvement before submission.";
-
-    setValidationItem(validationItems.dimensions, dimensionsPass ? "pass" : "warn", `${width} × ${height}px`);
-    setValidationItem(validationItems.fileSize, sizePass ? "pass" : "fail", `${formatFileSize(blob.size)} ${sizePass ? "meets" : "exceeds"} the target`);
-    setValidationItem(validationItems.brightness, brightnessPass ? "pass" : "warn", `${Math.round(metrics.meanBrightness)}/255 average`);
-    setValidationItem(validationItems.contrast, contrastPass ? "pass" : "warn", `${Math.round(metrics.contrast)} contrast score`);
-    setValidationItem(validationItems.sharpness, sharpnessPass ? "pass" : "warn", `${Math.round(metrics.sharpness)} detail score`);
-    setValidationItem(validationItems.background, backgroundPass ? "pass" : "warn", `${Math.round(metrics.edgeUniformity * 100)}% edge consistency`);
-
-    validationAdvice.innerHTML = "";
-    (advice.length ? advice : ["The processed image passes the current technical checks. Verify the official portal instructions before submitting."]).forEach((message) => {
-        const li = document.createElement("li");
-        li.textContent = message;
-        validationAdvice.appendChild(li);
-    });
-
-    trackFormPhotoEvent("validation_report_generated", {
-        score,
-        file_size_pass: sizePass,
-        brightness_pass: brightnessPass,
-        contrast_pass: contrastPass,
-        sharpness_pass: sharpnessPass
-    });
+function normalizeScore(value, low, high) {
+  if (value <= low) return 35;
+  if (value >= high) return 100;
+  return 35 + ((value - low) / (high - low)) * 65;
 }
 
-function analyzeCanvasQuality(canvas) {
-    const sample = document.createElement("canvas");
-    const maxSide = 180;
-    const scale = Math.min(1, maxSide / Math.max(canvas.width, canvas.height));
-    sample.width = Math.max(24, Math.round(canvas.width * scale));
-    sample.height = Math.max(24, Math.round(canvas.height * scale));
-    const ctx = sample.getContext("2d", { willReadFrequently: true });
-    ctx.drawImage(canvas, 0, 0, sample.width, sample.height);
-    const { data } = ctx.getImageData(0, 0, sample.width, sample.height);
-    const luminance = new Float32Array(sample.width * sample.height);
-    let sum = 0;
-
-    for (let i = 0, p = 0; i < data.length; i += 4, p += 1) {
-        const value = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
-        luminance[p] = value;
-        sum += value;
-    }
-
-    const mean = sum / luminance.length;
-    let variance = 0;
-    let edgeEnergy = 0;
-    let edgeCount = 0;
-    let edgeDeviation = 0;
-    let borderCount = 0;
-
-    for (let y = 0; y < sample.height; y += 1) {
-        for (let x = 0; x < sample.width; x += 1) {
-            const index = y * sample.width + x;
-            const value = luminance[index];
-            variance += (value - mean) ** 2;
-            if (x > 0 && y > 0) {
-                edgeEnergy += Math.abs(value - luminance[index - 1]) + Math.abs(value - luminance[index - sample.width]);
-                edgeCount += 2;
-            }
-            const isBorder = x < 3 || y < 3 || x >= sample.width - 3 || y >= sample.height - 3;
-            if (isBorder) {
-                edgeDeviation += Math.abs(value - mean);
-                borderCount += 1;
-            }
-        }
-    }
-
-    const contrast = Math.sqrt(variance / luminance.length);
-    const sharpness = edgeCount ? edgeEnergy / edgeCount : 0;
-    const meanEdgeDeviation = borderCount ? edgeDeviation / borderCount : 255;
-    const edgeUniformity = Math.max(0, Math.min(1, 1 - meanEdgeDeviation / 90));
-
-    return { meanBrightness: mean, contrast, sharpness, edgeUniformity };
+function setAnalyzerMetric(key, score, note) {
+  const [valueElement, noteElement] = analyzerMetrics[key] || [];
+  if (valueElement) valueElement.textContent = `${Math.round(score)}/100`;
+  if (noteElement) noteElement.textContent = note;
 }
 
-function setValidationItem(element, status, message) {
-    if (!element) return;
-    element.classList.remove("pass", "warn", "fail");
-    element.classList.add(status);
-    const icon = element.querySelector(".validation-icon");
-    const text = element.querySelector("small");
-    if (icon) icon.textContent = status === "pass" ? "✓" : status === "fail" ? "×" : "!";
-    if (text) text.textContent = message;
+function resetThumbnailAnalyzer() {
+  if (analyzerOverall) analyzerOverall.textContent = "--";
+  if (analyzerOverallBar) analyzerOverallBar.style.width = "0%";
+  if (analyzerSummary) analyzerSummary.textContent = "Upload a cover to analyze its technical visual quality.";
+  Object.values(analyzerMetrics).forEach(([valueElement, noteElement]) => {
+    if (valueElement) valueElement.textContent = "--";
+    if (noteElement) noteElement.textContent = "Waiting";
+  });
+  if (analyzerSuggestions) analyzerSuggestions.innerHTML = "<li>Your suggestions will appear here.</li>";
 }
 
-function resetValidationReport() {
-    if (!validationReport) return;
-    validationReport.hidden = true;
-    if (validationScore) validationScore.textContent = "--";
-    if (validationScoreBar) validationScoreBar.style.width = "0%";
+function updateCreatorScore(image, ratioStatus) {
+  if (!creatorScoreValue || !scoreRatio || !scoreResolution || !scoreSafeZone || !scoreGrid) return;
+
+  const width = image.naturalWidth;
+  const height = image.naturalHeight;
+  let score = 100;
+  const advice = [];
+
+  if (ratioStatus !== "good_9_16_fit") {
+    score -= 28;
+    advice.push(
+      ratioStatus === "too_wide"
+        ? "Crop the left and right sides or redesign on a 9:16 canvas."
+        : "Add side space or redesign on a 9:16 canvas so the cover does not look narrow."
+    );
+  }
+
+  if (width < 720 || height < 1280) {
+    score -= 24;
+    advice.push("Export a larger image. Aim for 1080 × 1920 px for clearer results.");
+  } else if (width < TARGET_WIDTH || height < TARGET_HEIGHT) {
+    score -= 10;
+    advice.push("Your resolution is usable, but 1080 × 1920 px is safer for sharp output.");
+  }
+
+  if (!state.showSafeZone) {
+    score -= 6;
+    advice.push("Turn the safe-zone overlay on before your final check.");
+  }
+
+  if (!state.showGridPreview) {
+    score -= 6;
+    advice.push("Turn the grid preview on to confirm the center crop still works.");
+  }
+
+  score = Math.max(35, Math.min(100, score));
+  creatorScoreValue.textContent = `${score}/100`;
+  if (creatorScoreBar) creatorScoreBar.style.width = `${score}%`;
+
+  const rating = getScoreRating(score);
+  if (creatorScoreLabel) {
+    creatorScoreLabel.textContent = `${rating.label} — ${rating.message}`;
+    creatorScoreLabel.dataset.rating = rating.key;
+  }
+
+  setChecklistItem(
+    scoreRatio,
+    ratioStatus === "good_9_16_fit" ? "pass" : "warn",
+    ratioStatus === "good_9_16_fit"
+      ? "Aspect ratio is close to 9:16."
+      : "Aspect ratio needs adjustment; some content may be cropped."
+  );
+
+  const highResolution = width >= TARGET_WIDTH && height >= TARGET_HEIGHT;
+  const usableResolution = width >= 720 && height >= 1280;
+  setChecklistItem(
+    scoreResolution,
+    highResolution ? "pass" : usableResolution ? "warn" : "fail",
+    highResolution
+      ? "Resolution meets the 1080 × 1920 recommendation."
+      : usableResolution
+        ? "Resolution is usable, but below the ideal export size."
+        : "Resolution is low and may look soft after posting."
+  );
+
+  setChecklistItem(
+    scoreSafeZone,
+    state.showSafeZone ? "pass" : "warn",
+    state.showSafeZone
+      ? "Safe-zone overlay is visible for manual placement checking."
+      : "Safe-zone overlay is hidden."
+  );
+
+  setChecklistItem(
+    scoreGrid,
+    state.showGridPreview ? "pass" : "warn",
+    state.showGridPreview
+      ? "Profile grid crop preview is visible."
+      : "Profile grid crop preview is hidden."
+  );
+
+  renderSmartAdvice(advice);
 }
 
-function getPresetReadyFor(presetValue) {
-    const labels = {
-        "photo-200-230-50": "Photo form requiring under 50 KB",
-        "photo-300-400-100": "Passport, admission, or ID-style form",
-        "photo-600-600-200": "Profile or job application",
-        "signature-140-60-20": "Signature form requiring under 20 KB",
-        "signature-300-100-50": "Signature form requiring under 50 KB",
-        "custom": "Custom requirement"
-    };
-    return labels[presetValue] || "General online form";
+function getScoreRating(score) {
+  if (score >= 90) {
+    return { key: "excellent", label: "Excellent", message: "Technically ready for a final visual check." };
+  }
+  if (score >= 75) {
+    return { key: "good", label: "Good", message: "A few improvements can make it safer." };
+  }
+  if (score >= 55) {
+    return { key: "adjust", label: "Needs adjustment", message: "Fix the highlighted technical issues." };
+  }
+  return { key: "poor", label: "Not ready", message: "Use a larger 9:16 export before posting." };
 }
 
-function startProcessProgress() {
-    if (!processProgress) return;
-    processProgress.hidden = false;
-    updateProcessProgress(8, "Preparing image…", "prepare");
+function renderSmartAdvice(advice) {
+  if (!smartAdviceList) return;
+
+  const suggestions = advice.length
+    ? advice
+    : [
+        "Keep titles, faces, and logos inside the green safe-zone box.",
+        "Check the square profile crop before downloading."
+      ];
+
+  smartAdviceList.innerHTML = "";
+  suggestions.forEach((suggestion) => {
+    const item = document.createElement("li");
+    item.textContent = suggestion;
+    smartAdviceList.appendChild(item);
+  });
 }
 
-function updateProcessProgress(percent, label, activeStep) {
-    if (processProgressLabel) processProgressLabel.textContent = label;
-    if (processProgressPercent) processProgressPercent.textContent = `${percent}%`;
-    if (processProgressBar) processProgressBar.style.width = `${percent}%`;
-
-    processStepLabels.forEach((step) => {
-        const order = ["prepare", "resize", "compress", "done"];
-        const activeIndex = order.indexOf(activeStep);
-        const stepIndex = order.indexOf(step.dataset.step);
-        step.classList.toggle("active", stepIndex <= activeIndex);
-    });
+function refreshCreatorScore() {
+  if (!state.image) return;
+  const ratio = state.image.naturalWidth / state.image.naturalHeight;
+  const difference = Math.abs(ratio - TARGET_RATIO);
+  const ratioStatus = difference <= RATIO_TOLERANCE
+    ? "good_9_16_fit"
+    : ratio > TARGET_RATIO
+      ? "too_wide"
+      : "too_tall_or_narrow";
+  updateCreatorScore(state.image, ratioStatus);
 }
 
-function nextFrame() {
-    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+function resetCreatorScore() {
+  if (!creatorScoreValue || !scoreRatio || !scoreResolution || !scoreSafeZone || !scoreGrid) return;
+
+  creatorScoreValue.textContent = "--";
+  if (creatorScoreBar) creatorScoreBar.style.width = "0%";
+  if (creatorScoreLabel) {
+    creatorScoreLabel.textContent = "Upload a cover to generate your report.";
+    delete creatorScoreLabel.dataset.rating;
+  }
+  setChecklistItem(scoreRatio, "", "Upload an image to check 9:16 fit.");
+  setChecklistItem(scoreResolution, "", "Resolution check waiting.");
+  setChecklistItem(scoreSafeZone, "", "Safe zone guidance waiting.");
+  setChecklistItem(scoreGrid, "", "Grid crop preview waiting.");
+  renderSmartAdvice(["Your personalized technical suggestions will appear here."]);
 }
 
-function trackEvent(eventName, params = {}) {
-    if (typeof gtag === "function") {
-        gtag("event", eventName, params);
-    }
-}
-
-function isValidNumber(value, min, max) {
-    return Number.isFinite(value) && value >= min && value <= max;
+function setChecklistItem(element, status, text) {
+  if (!element) return;
+  element.classList.remove("pass", "warn", "fail");
+  if (status) element.classList.add(status);
+  element.textContent = text;
 }
 
 function formatFileSize(bytes) {
-    if (bytes < 1024 * 1024) {
-        return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  if (bytes < 1024 * 1024) {
+    return `${Math.round(bytes / 1024)} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+
+
+
+function setupOverlayToggle(button, stateKey, eventName) {
+  if (!button) return;
+
+  button.addEventListener("click", () => {
+    state[stateKey] = !state[stateKey];
+    button.classList.toggle("active", state[stateKey]);
+    button.setAttribute("aria-pressed", state[stateKey] ? "true" : "false");
+    redrawCropPreviews();
+
+    trackEvent(eventName, {
+      enabled: state[stateKey] ? "yes" : "no"
+    });
+  });
+}
+
+function setupCropControls() {
+  if (!reelCanvas) return;
+
+  const pointers = new Map();
+  let lastPointer = null;
+  let pinchStartDistance = 0;
+  let pinchStartZoom = 1;
+
+  if (zoomRange) {
+    zoomRange.addEventListener("input", () => {
+      if (!state.image) return;
+      setCropZoom(Number(zoomRange.value) / 100, true);
+    });
+  }
+
+  if (resetCropBtn) {
+    resetCropBtn.addEventListener("click", () => resetCrop(true));
+  }
+
+  setupOverlayToggle(toggleThirdsBtn, "showRuleOfThirds", "rule_of_thirds_toggle");
+  setupOverlayToggle(toggleFaceGuideBtn, "showFaceGuide", "face_guide_toggle");
+  setupOverlayToggle(toggleSnapBtn, "snapToCenter", "snap_to_center_toggle");
+
+  reelCanvas.addEventListener("dblclick", () => {
+    if (state.image) resetCrop(true);
+  });
+
+  reelCanvas.addEventListener("wheel", (event) => {
+    if (!state.image) return;
+    event.preventDefault();
+    const step = event.deltaY < 0 ? 0.08 : -0.08;
+    setCropZoom(state.cropZoom + step, true);
+  }, { passive: false });
+
+  reelCanvas.addEventListener("pointerdown", (event) => {
+    if (!state.image) return;
+    reelCanvas.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (pointers.size === 1) {
+      state.isDragging = true;
+      lastPointer = { x: event.clientX, y: event.clientY };
+      reelCanvas.classList.add("is-dragging");
+    } else if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinchStartDistance = Math.hypot(b.x - a.x, b.y - a.y);
+      pinchStartZoom = state.cropZoom;
+      state.isDragging = false;
+    }
+  });
+
+  reelCanvas.addEventListener("pointermove", (event) => {
+    if (!state.image || !pointers.has(event.pointerId)) return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const distance = Math.hypot(b.x - a.x, b.y - a.y);
+      if (pinchStartDistance > 0) {
+        setCropZoom(pinchStartZoom * (distance / pinchStartDistance), false);
+        redrawCropPreviews();
+      }
+      return;
     }
 
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
+    if (!state.isDragging || !lastPointer) return;
+    const rect = reelCanvas.getBoundingClientRect();
+    const scaleX = TARGET_WIDTH / rect.width;
+    const scaleY = TARGET_HEIGHT / rect.height;
+    state.cropOffsetX += (event.clientX - lastPointer.x) * scaleX;
+    state.cropOffsetY += (event.clientY - lastPointer.y) * scaleY;
+    lastPointer = { x: event.clientX, y: event.clientY };
+    redrawCropPreviews();
+  });
 
-function readableFormat(mimeType) {
-    if (mimeType === "image/jpeg") return "JPG";
-    if (mimeType === "image/png") return "PNG";
-    if (mimeType === "image/webp") return "WebP";
-    return mimeType;
-}
-
-function extensionFromMime(mimeType) {
-    if (mimeType === "image/jpeg") return "jpg";
-    if (mimeType === "image/png") return "png";
-    if (mimeType === "image/webp") return "webp";
-    return "jpg";
-}
-
-
-showAdvancedSettings(presetSelect && presetSelect.value === "custom");
-updateActivePresetChip(presetSelect ? presetSelect.value : "photo-200-230-50");
-
-function trackFormPhotoEvent(eventName, params = {}) {
-    if (typeof gtag === "function") {
-        gtag("event", eventName, {
-            tool_name: "formphotofit",
-            page_path: window.location.pathname,
-            ...params
-        });
+  const endPointer = (event) => {
+    pointers.delete(event.pointerId);
+    if (pointers.size === 0) {
+      state.isDragging = false;
+      lastPointer = null;
+      reelCanvas.classList.remove("is-dragging");
+      trackEvent("crop_adjusted", {
+        zoom_percent: Math.round(state.cropZoom * 100),
+        offset_x: Math.round(state.cropOffsetX),
+        offset_y: Math.round(state.cropOffsetY)
+      });
+    } else if (pointers.size === 1) {
+      const point = [...pointers.values()][0];
+      state.isDragging = true;
+      lastPointer = { ...point };
+      reelCanvas.classList.add("is-dragging");
     }
-}
+  };
 
-// FormPhotoFit v2.2 — Smart Requirement Center
-const popularRequirementButtons = document.querySelectorAll("[data-requirement-target]");
-const recentRequirementsBox = document.getElementById("recentRequirements");
-const recentRequirementChips = document.getElementById("recentRequirementChips");
-const clearRecentRequirements = document.getElementById("clearRecentRequirements");
-const requirementDetailsTitle = document.getElementById("requirementDetailsTitle");
-const requirementDetailDimensions = document.getElementById("requirementDetailDimensions");
-const requirementDetailSize = document.getElementById("requirementDetailSize");
-const requirementDetailFormat = document.getElementById("requirementDetailFormat");
-const requirementDetailBackground = document.getElementById("requirementDetailBackground");
-const copySettingsBtn = document.getElementById("copySettingsBtn");
-const clearToolBtn = document.getElementById("clearToolBtn");
-const RECENT_REQUIREMENTS_KEY = "formphotofit_recent_requirements_v1";
+  reelCanvas.addEventListener("pointerup", endPointer);
+  reelCanvas.addEventListener("pointercancel", endPointer);
 
-function getRequirementCardData(card) {
-    const preset = presets[card.dataset.preset] || null;
-    return {
-        key: card.dataset.requirement || card.dataset.readyFor || "requirement",
-        title: card.dataset.readyFor || card.querySelector("strong")?.textContent || "Requirement",
-        details: card.querySelector("small")?.textContent || "Custom settings",
-        preset: card.dataset.preset,
-        width: preset?.width || Number(targetWidth.value),
-        height: preset?.height || Number(targetHeight.value),
-        kb: preset?.kb || Number(targetKB.value),
-        format: readableFormat(preset?.format || formatSelect.value),
-        background: preset?.whiteBg === false ? "Transparent" : "White"
-    };
-}
+  reelCanvas.addEventListener("keydown", (event) => {
+    if (!state.image) return;
+    const amount = event.shiftKey ? 60 : 20;
+    let handled = true;
+    if (event.key === "ArrowLeft") state.cropOffsetX -= amount;
+    else if (event.key === "ArrowRight") state.cropOffsetX += amount;
+    else if (event.key === "ArrowUp") state.cropOffsetY -= amount;
+    else if (event.key === "ArrowDown") state.cropOffsetY += amount;
+    else if (event.key === "+" || event.key === "=") setCropZoom(state.cropZoom + 0.05, false);
+    else if (event.key === "-") setCropZoom(state.cropZoom - 0.05, false);
+    else if (event.key === "0") resetCrop(true);
+    else handled = false;
 
-function updateRequirementDetails(data) {
-    if (!data) return;
-    if (requirementDetailsTitle) requirementDetailsTitle.textContent = data.title;
-    if (requirementDetailDimensions) requirementDetailDimensions.textContent = `${data.width} × ${data.height} px`;
-    if (requirementDetailSize) requirementDetailSize.textContent = `${data.kb} KB`;
-    if (requirementDetailFormat) requirementDetailFormat.textContent = data.format;
-    if (requirementDetailBackground) requirementDetailBackground.textContent = data.background;
-}
-
-function saveRecentRequirement(data) {
-    try {
-        const previous = JSON.parse(localStorage.getItem(RECENT_REQUIREMENTS_KEY) || "[]");
-        const next = [data, ...previous.filter((item) => item.key !== data.key)].slice(0, 4);
-        localStorage.setItem(RECENT_REQUIREMENTS_KEY, JSON.stringify(next));
-        renderRecentRequirements();
-    } catch (error) { console.warn("Recent requirements unavailable", error); }
-}
-
-function renderRecentRequirements() {
-    if (!recentRequirementsBox || !recentRequirementChips) return;
-    let items = [];
-    try { items = JSON.parse(localStorage.getItem(RECENT_REQUIREMENTS_KEY) || "[]"); } catch {}
-    recentRequirementChips.innerHTML = "";
-    recentRequirementsBox.hidden = items.length === 0;
-    items.forEach((item) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = item.title;
-        button.addEventListener("click", () => {
-            const card = [...requirementCards].find((candidate) => candidate.dataset.requirement === item.key || candidate.dataset.readyFor === item.title);
-            if (card) card.click();
-        });
-        recentRequirementChips.appendChild(button);
-    });
-}
-
-requirementCards.forEach((card) => {
-    card.addEventListener("click", () => {
-        const data = getRequirementCardData(card);
-        updateRequirementDetails(data);
-        saveRecentRequirement(data);
-    });
-});
-
-popularRequirementButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-        const target = button.dataset.requirementTarget;
-        const card = [...requirementCards].find((candidate) => (candidate.dataset.requirement || "").includes(target));
-        if (card) card.click();
-    });
-});
-
-if (clearRecentRequirements) clearRecentRequirements.addEventListener("click", () => {
-    localStorage.removeItem(RECENT_REQUIREMENTS_KEY);
-    renderRecentRequirements();
-});
-
-if (copySettingsBtn) copySettingsBtn.addEventListener("click", async () => {
-    const text = [
-        `Requirement: ${requirementDetailsTitle?.textContent || state.activeRequirement}`,
-        `Width: ${targetWidth.value} px`,
-        `Height: ${targetHeight.value} px`,
-        `Maximum size: ${targetKB.value} KB`,
-        `Format: ${readableFormat(formatSelect.value)}`,
-        `Background: ${backgroundColorInput.value === "transparent" ? "Transparent" : "White"}`
-    ].join("\n");
-    try { await navigator.clipboard.writeText(text); setStatus("Settings copied.", "success"); trackFormPhotoEvent("requirement_settings_copied"); }
-    catch { setStatus("Could not copy settings.", "warning"); }
-});
-
-if (clearToolBtn) clearToolBtn.addEventListener("click", () => {
-    resetTool();
-    if (requirementSearch) {
-        requirementSearch.value = "";
-        requirementCards.forEach((card) => card.hidden = false);
+    if (handled) {
+      event.preventDefault();
+      redrawCropPreviews();
     }
-    requirementCards.forEach((card) => { card.classList.remove("active"); card.setAttribute("aria-pressed", "false"); });
-    if (requirementApplied) requirementApplied.hidden = true;
-    state.activeRequirement = "General online form";
-    updateRequirementDetails({title:"General online form",width:200,height:230,kb:50,format:"JPG",background:"White"});
-    setStatus("Tool cleared. Choose a requirement or upload a new image.", "");
-});
+  });
+}
 
-renderRecentRequirements();
+function setCropZoom(nextZoom, shouldRedraw = true) {
+  state.cropZoom = clamp(nextZoom, 1, 3);
+  if (zoomRange) zoomRange.value = String(Math.round(state.cropZoom * 100));
+  if (zoomValue) zoomValue.textContent = `${Math.round(state.cropZoom * 100)}%`;
+  if (shouldRedraw) redrawCropPreviews();
+}
 
-
-// FormPhotoFit v2.2.1 — category filters, favorites, finished success flow
-const requirementCategoryFilters = document.querySelectorAll('.category-filter');
-const favoriteRequirementBtn = document.getElementById('favoriteRequirementBtn');
-const requirementDetailCategory = document.getElementById('requirementDetailCategory');
-const requirementDetailUpdated = document.getElementById('requirementDetailUpdated');
-const successPanel = document.getElementById('successPanel');
-const successPanelText = document.getElementById('successPanelText');
-const successDownloadBtn = document.getElementById('successDownloadBtn');
-const successCopyBtn = document.getElementById('successCopyBtn');
-const successAnotherBtn = document.getElementById('successAnotherBtn');
-const FAVORITES_KEY = 'formphotofit_favorite_requirements_v1';
-let activeRequirementCategory = 'all';
-let currentRequirementCard = null;
-
-function readFavoriteRequirements(){ try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; } }
-function writeFavoriteRequirements(items){ try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(items)); } catch {} }
-function requirementKey(card){ return card?.dataset.requirement || card?.dataset.readyFor || ''; }
-function refreshFavoriteUI(){
-  const favorites = readFavoriteRequirements();
-  requirementCards.forEach(card => card.classList.toggle('is-favorite', favorites.includes(requirementKey(card))));
-  if (favoriteRequirementBtn) {
-    const selected = currentRequirementCard && favorites.includes(requirementKey(currentRequirementCard));
-    favoriteRequirementBtn.setAttribute('aria-pressed', selected ? 'true' : 'false');
-    favoriteRequirementBtn.textContent = selected ? '★ Favorited' : '☆ Add Favorite';
-    favoriteRequirementBtn.disabled = !currentRequirementCard;
+function resetCrop(announce = false) {
+  state.cropZoom = 1;
+  state.cropOffsetX = 0;
+  state.cropOffsetY = 0;
+  if (zoomRange) zoomRange.value = "100";
+  if (zoomValue) zoomValue.textContent = "100%";
+  if (state.image) redrawCropPreviews();
+  if (announce) {
+    setStatus("Crop reset to the centered 9:16 view.", "success");
+    trackEvent("crop_reset");
   }
 }
-function applyRequirementFilters(){
-  const query = requirementSearch?.value.trim().toLowerCase() || '';
-  const favorites = readFavoriteRequirements();
-  let visible = 0;
-  requirementCards.forEach(card => {
-    const searchText = `${card.dataset.requirement || ''} ${card.textContent}`.toLowerCase();
-    const searchMatch = !query || searchText.includes(query);
-    const categoryMatch = activeRequirementCategory === 'all' ||
-      (activeRequirementCategory === 'favorites' ? favorites.includes(requirementKey(card)) : card.dataset.category === activeRequirementCategory);
-    card.hidden = !(searchMatch && categoryMatch);
-    if (!card.hidden) visible += 1;
-  });
-  requirementSearch?.setAttribute('aria-label', `${visible} requirements found`);
+
+function redrawCropPreviews() {
+  if (!state.image) return;
+  drawReelPreview();
+  drawGridPreview();
+  drawSurfacePreview();
+  updateThumbnailAnalyzer();
 }
-requirementCategoryFilters.forEach(button => button.addEventListener('click', () => {
-  activeRequirementCategory = button.dataset.category;
-  requirementCategoryFilters.forEach(item => { const on = item === button; item.classList.toggle('active', on); item.setAttribute('aria-pressed', on ? 'true':'false'); });
-  applyRequirementFilters();
-}));
-requirementSearch?.addEventListener('input', applyRequirementFilters);
-requirementCards.forEach(card => card.addEventListener('click', () => {
-  currentRequirementCard = card;
-  const label = card.querySelector('strong')?.textContent || 'Requirement';
-  if (requirementDetailCategory) requirementDetailCategory.textContent = ({exams:'Indian Exam',ids:'Government ID',international:'Passport / Visa',professional:'Professional',signature:'Signature'})[card.dataset.category] || 'General';
-  if (requirementDetailUpdated) requirementDetailUpdated.textContent = 'July 2026';
-  refreshFavoriteUI();
-}));
-favoriteRequirementBtn?.addEventListener('click', () => {
-  if (!currentRequirementCard) return;
-  const key = requirementKey(currentRequirementCard); let favorites = readFavoriteRequirements();
-  favorites = favorites.includes(key) ? favorites.filter(item => item !== key) : [...favorites, key].slice(-20);
-  writeFavoriteRequirements(favorites); refreshFavoriteUI(); applyRequirementFilters();
-  setStatus(favorites.includes(key) ? 'Requirement added to favorites.' : 'Requirement removed from favorites.', 'success');
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+// scroll_depth_tracking
+const scrollDepthState = {
+  25: false,
+  50: false,
+  75: false,
+  90: false
+};
+
+window.addEventListener("scroll", () => {
+  const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+  if (scrollableHeight <= 0) return;
+
+  const scrollPercent = Math.round((window.scrollY / scrollableHeight) * 100);
+
+  Object.keys(scrollDepthState).forEach((depth) => {
+    const depthNumber = Number(depth);
+    if (scrollPercent >= depthNumber && !scrollDepthState[depthNumber]) {
+      scrollDepthState[depthNumber] = true;
+      trackEvent(`scroll_${depthNumber}`);
+    }
+  });
+}, { passive: true });
+
+const platformButtons = document.querySelectorAll(".platform-btn");
+const shareBox = document.getElementById("shareBox");
+const copySiteLinkBtn = document.getElementById("copySiteLinkBtn");
+
+platformButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    platformButtons.forEach((btn) => {
+      btn.classList.remove("active");
+      btn.setAttribute("aria-pressed", "false");
+    });
+    button.classList.add("active");
+    button.setAttribute("aria-pressed", "true");
+
+    const platform = button.dataset.platform;
+
+    recommendationText.textContent =
+      `${platform} selected. Use a vertical 9:16 cover and keep text near the center safe zone.`;
+
+    trackEvent("platform_selected", {
+      platform
+    });
+  });
 });
 
-function showFinishedSuccessPanel(){
-  if (!successPanel) return;
-  successPanel.hidden = false;
-  if (successPanelText) successPanelText.textContent = `${state.activeRequirement || 'Selected requirement'} settings are applied. Review the validation report, then download your image.`;
-  const scoreNumber = Number(validationScore?.textContent || 0);
-  const scoreCircle = validationScore?.closest('.validation-score');
-  if (scoreCircle) scoreCircle.style.setProperty('--validation-score-angle', `${Math.max(0,Math.min(100,scoreNumber))*3.6}deg`);
-}
-successDownloadBtn?.addEventListener('click', downloadImage);
-successCopyBtn?.addEventListener('click', () => copySettingsBtn?.click());
-successAnotherBtn?.addEventListener('click', () => { requirementSearch?.focus(); document.querySelector('.requirement-finder')?.scrollIntoView({behavior:'smooth',block:'start'}); });
 
-// hook into existing output/clear functions without replacing stable logic
-const originalUpdateOutputV221 = updateOutput;
-updateOutput = function(...args){ const result = originalUpdateOutputV221.apply(this,args); window.setTimeout(showFinishedSuccessPanel,60); return result; };
-const originalClearResultV221 = clearResult;
-clearResult = function(...args){ const result = originalClearResultV221.apply(this,args); if(successPanel) successPanel.hidden = true; return result; };
-refreshFavoriteUI();
+if (copySiteLinkBtn) {
+  copySiteLinkBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("https://reelcoverfit.com/");
+      setStatus("Website link copied.", "success");
+      trackEvent("copy_site_link");
+    } catch {
+      setStatus("Copy failed. Manually copy reelcoverfit.com", "warning");
+    }
+  });
+}
+
+
+// ReelCoverFit v2.4 — Multi-platform Preview Studio
+const surfaceCanvas = document.getElementById("surfaceCanvas");
+const surfaceCtx = surfaceCanvas ? surfaceCanvas.getContext("2d") : null;
+const emptySurfacePreview = document.getElementById("emptySurfacePreview");
+const surfaceTabs = document.querySelectorAll(".surface-tab");
+const surfacePreviewTag = document.getElementById("surfacePreviewTag");
+const surfacePreviewAdvice = document.getElementById("surfacePreviewAdvice");
+const surfaceCanvasWrap = document.getElementById("surfaceCanvasWrap");
+state.activeSurface = "instagram-reel";
+
+const surfaceConfig = {
+  "instagram-reel": { width:1080, height:1920, label:"Instagram Reel · 9:16", advice:"Check the full vertical cover and keep key content inside the safe area." },
+  "instagram-grid": { width:1080, height:1080, label:"Profile Grid · 1:1", advice:"This center crop shows what may remain visible on a square profile grid." },
+  "instagram-explore": { width:1080, height:1350, label:"Instagram Explore · 4:5", advice:"The 4:5 preview helps you protect titles and faces in portrait discovery surfaces." },
+  "youtube-shorts": { width:1080, height:1920, label:"YouTube Shorts · 9:16", advice:"Use the center area for titles because player controls can cover edge content." },
+  "tiktok": { width:1080, height:1920, label:"TikTok · 9:16", advice:"Keep text away from the right-side action rail and bottom caption area." }
+};
+
+function drawSurfacePreview() {
+  if (!state.image || !surfaceCtx || !surfaceCanvas) return;
+  const config = surfaceConfig[state.activeSurface] || surfaceConfig["instagram-reel"];
+  surfaceCanvas.width = config.width;
+  surfaceCanvas.height = config.height;
+  surfaceCtx.clearRect(0,0,config.width,config.height);
+
+  const temp = document.createElement("canvas");
+  temp.width = TARGET_WIDTH; temp.height = TARGET_HEIGHT;
+  const tempCtx = temp.getContext("2d");
+  drawImageWithCrop(tempCtx,state.image,TARGET_WIDTH,TARGET_HEIGHT);
+
+  const targetRatio = config.width/config.height;
+  const sourceRatio = TARGET_WIDTH/TARGET_HEIGHT;
+  let sx=0, sy=0, sw=TARGET_WIDTH, sh=TARGET_HEIGHT;
+  if (targetRatio > sourceRatio) { sh = TARGET_WIDTH/targetRatio; sy=(TARGET_HEIGHT-sh)/2; }
+  else if (targetRatio < sourceRatio) { sw = TARGET_HEIGHT*targetRatio; sx=(TARGET_WIDTH-sw)/2; }
+  surfaceCtx.drawImage(temp,sx,sy,sw,sh,0,0,config.width,config.height);
+
+  if (state.activeSurface === "tiktok") {
+    surfaceCtx.fillStyle="rgba(15,23,42,.42)";
+    surfaceCtx.fillRect(config.width-150,120,150,config.height-360);
+    surfaceCtx.fillRect(0,config.height-260,config.width,260);
+  }
+  if (state.activeSurface === "youtube-shorts") {
+    surfaceCtx.fillStyle="rgba(15,23,42,.34)";
+    surfaceCtx.fillRect(0,config.height-220,config.width,220);
+  }
+  surfaceCanvas.style.display="block";
+  if (emptySurfacePreview) emptySurfacePreview.style.display="none";
+  if (surfaceCanvasWrap) surfaceCanvasWrap.dataset.surface=state.activeSurface;
+  if (surfacePreviewTag) surfacePreviewTag.textContent=config.label;
+  if (surfacePreviewAdvice) surfacePreviewAdvice.textContent=config.advice;
+}
+
+surfaceTabs.forEach((button)=>button.addEventListener("click",()=>{
+  surfaceTabs.forEach((item)=>{item.classList.remove("active");item.setAttribute("aria-selected","false")});
+  button.classList.add("active"); button.setAttribute("aria-selected","true");
+  state.activeSurface=button.dataset.surface;
+  drawSurfacePreview();
+  trackEvent("surface_preview_selected",{surface:state.activeSurface});
+}));
+
+// Keep platform selector and preview studio aligned.
+platformButtons.forEach((button)=>button.addEventListener("click",()=>{
+  const platform=button.dataset.platform;
+  const map={"Instagram Reels":"instagram-reel","YouTube Shorts":"youtube-shorts","TikTok":"tiktok","Facebook Reels":"instagram-reel"};
+  const target=map[platform];
+  const tab=[...surfaceTabs].find((item)=>item.dataset.surface===target);
+  if(tab) tab.click();
+}));
+
+
+// ReelCoverFit v2.4.1 — visual rating sync and refined preview feedback
+const creatorStars = document.getElementById('creatorStars');
+const creatorStatusBadge = document.getElementById('creatorStatusBadge');
+function syncCreatorVisualRating(){
+  if(!creatorScoreValue) return;
+  const score = Number((creatorScoreValue.textContent || '').replace(/[^0-9]/g,''));
+  if(!score){ if(creatorStars){creatorStars.textContent='☆☆☆☆☆';creatorStars.setAttribute('aria-label','Creator rating waiting');} if(creatorStatusBadge){creatorStatusBadge.textContent='Waiting';creatorStatusBadge.className='creator-status-badge waiting';} return; }
+  const starCount = Math.max(1,Math.min(5,Math.round(score/20)));
+  if(creatorStars){ creatorStars.textContent='★'.repeat(starCount)+'☆'.repeat(5-starCount); creatorStars.setAttribute('aria-label',`${starCount} out of 5 stars`); }
+  let label='Needs work', cls='poor';
+  if(score>=90){label='Excellent';cls='excellent'} else if(score>=75){label='Good';cls='good'} else if(score>=55){label='Adjust';cls='adjust'}
+  if(creatorStatusBadge){creatorStatusBadge.textContent=label;creatorStatusBadge.className=`creator-status-badge ${cls}`;}
+}
+const creatorScoreObserver = creatorScoreValue ? new MutationObserver(syncCreatorVisualRating) : null;
+creatorScoreObserver?.observe(creatorScoreValue,{childList:true,characterData:true,subtree:true});
+syncCreatorVisualRating();
+
+// Re-trigger a subtle canvas reveal when switching platform surfaces.
+document.querySelectorAll('.surface-tab').forEach(button => button.addEventListener('click',()=>{
+  if(!surfaceCanvas) return;
+  surfaceCanvas.style.animation='none';
+  void surfaceCanvas.offsetWidth;
+  surfaceCanvas.style.animation='surfaceReveal .22s ease';
+}));
