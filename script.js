@@ -109,6 +109,15 @@ const validationScore = document.getElementById("validationScore");
 const validationScoreBar = document.getElementById("validationScoreBar");
 const validationSummary = document.getElementById("validationSummary");
 const validationAdvice = document.getElementById("validationAdvice");
+const complianceRequirementName = document.getElementById("complianceRequirementName");
+const complianceTechnicalResult = document.getElementById("complianceTechnicalResult");
+const complianceStatusBadge = document.getElementById("complianceStatusBadge");
+const complianceItems = {
+    dimensions: document.getElementById("complianceDimensions"),
+    fileSize: document.getElementById("complianceFileSize"),
+    format: document.getElementById("complianceFormat"),
+    background: document.getElementById("complianceBackground")
+};
 const validationItems = {
     dimensions: document.getElementById("validationDimensions"),
     fileSize: document.getElementById("validationFileSize"),
@@ -727,41 +736,80 @@ function generateValidationReport(canvas, blob, width, height, targetKBValue) {
     if (!validationReport) return;
 
     const metrics = analyzeCanvasQuality(canvas);
-    const sizePass = blob.size <= targetKBValue * 1024;
-    const dimensionsPass = width >= 100 && height >= 60;
+    const requirement = getActiveComplianceRequirement();
+    const exactDimensionsPass = width === requirement.width && height === requirement.height;
+    const sizePass = blob.size <= requirement.kb * 1024;
+    const formatPass = formatSelect.value === requirement.mimeType;
+    const backgroundPass = backgroundColorInput?.value === requirement.backgroundValue;
+
     const brightnessPass = metrics.meanBrightness >= 65 && metrics.meanBrightness <= 225;
     const contrastPass = metrics.contrast >= 28;
     const sharpnessPass = metrics.sharpness >= 10;
-    const backgroundPass = metrics.edgeUniformity >= 0.55;
+    const edgeBackgroundPass = metrics.edgeUniformity >= 0.55;
 
-    let score = 100;
+    let score = 0;
+    score += exactDimensionsPass ? 30 : 0;
+    score += sizePass ? 25 : 0;
+    score += formatPass ? 15 : 0;
+    score += backgroundPass ? 10 : 0;
+    score += brightnessPass ? 7 : 0;
+    score += contrastPass ? 5 : 0;
+    score += sharpnessPass ? 5 : 0;
+    score += (modeSelect.value !== "photo" || edgeBackgroundPass) ? 3 : 0;
+
+    const technicalPass = exactDimensionsPass && sizePass && formatPass && backgroundPass;
+    const qualityPass = brightnessPass && contrastPass && sharpnessPass;
+    const strongResult = technicalPass && qualityPass;
     const advice = [];
 
-    if (!dimensionsPass) { score -= 20; advice.push("Use larger output dimensions when the portal allows it."); }
-    if (!sizePass) { score -= 24; advice.push("Reduce dimensions or choose JPG/WebP to meet the target file size."); }
-    if (!brightnessPass) {
-        score -= 12;
-        advice.push(metrics.meanBrightness < 65 ? "The image looks dark; increase lighting or exposure." : "The image looks very bright; reduce exposure to preserve detail.");
+    if (!exactDimensionsPass) {
+        advice.push(`Output must be exactly ${requirement.width} × ${requirement.height}px for the selected requirement.`);
     }
-    if (!contrastPass) { score -= 12; advice.push("Increase contrast slightly so the subject or signature is clearer."); }
-    if (!sharpnessPass) { score -= 18; advice.push("The image may be soft or blurry; use a sharper original image."); }
-    if (!backgroundPass && modeSelect.value === "photo") { score -= 8; advice.push("The outer edges are visually varied; official photos often work better with a plain background."); }
+    if (!sizePass) {
+        advice.push(`Output is ${formatFileSize(blob.size)}; keep it at or below ${requirement.kb} KB.`);
+    }
+    if (!formatPass) {
+        advice.push(`Use ${readableFormat(requirement.mimeType)} for the selected requirement.`);
+    }
+    if (!backgroundPass) {
+        advice.push(`The selected background setting does not match the current requirement guidance (${requirement.backgroundLabel}).`);
+    }
+    if (!brightnessPass) {
+        advice.push(metrics.meanBrightness < 65 ? "The image looks dark; improve lighting or exposure." : "The image looks very bright; reduce exposure to preserve detail.");
+    }
+    if (!contrastPass) advice.push("Increase contrast slightly so the subject or signature is clearer.");
+    if (!sharpnessPass) advice.push("The image may be soft or blurry; use a sharper original image.");
+    if (modeSelect.value === "photo" && !edgeBackgroundPass) advice.push("The outer edges vary noticeably; a plain background may work better for many photo requirements.");
 
-    score = Math.max(25, Math.min(100, Math.round(score)));
+    score = Math.max(0, Math.min(100, Math.round(score)));
     validationReport.hidden = false;
     validationScore.textContent = String(score);
     validationScoreBar.style.width = `${score}%`;
-    validationSummary.textContent = score >= 90 ? "Excellent technical quality." : score >= 75 ? "Good result with minor improvements possible." : score >= 55 ? "Usable, but review the warnings below." : "Needs improvement before submission.";
 
-    setValidationItem(validationItems.dimensions, dimensionsPass ? "pass" : "warn", `${width} × ${height}px`);
-    setValidationItem(validationItems.fileSize, sizePass ? "pass" : "fail", `${formatFileSize(blob.size)} ${sizePass ? "meets" : "exceeds"} the target`);
+    if (complianceRequirementName) complianceRequirementName.textContent = requirement.title;
+    if (complianceTechnicalResult) complianceTechnicalResult.textContent = strongResult ? "Technical checks passed" : technicalPass ? "Technical match; review quality" : "Needs adjustment";
+    setComplianceBadge(complianceStatusBadge, strongResult ? "pass" : technicalPass ? "warn" : "fail", strongResult ? "Strong match" : technicalPass ? "Technical match" : "Adjust first");
+
+    validationSummary.textContent = strongResult
+        ? "The processed file matches the selected technical requirements and current quality checks."
+        : technicalPass
+            ? "The file matches the selected technical settings, but one or more visual-quality checks need review."
+            : "The file does not yet match all selected technical requirements.";
+
+    setValidationItem(complianceItems.dimensions, exactDimensionsPass ? "pass" : "fail", exactDimensionsPass ? `${width} × ${height}px matches` : `${width} × ${height}px; needs ${requirement.width} × ${requirement.height}px`);
+    setValidationItem(complianceItems.fileSize, sizePass ? "pass" : "fail", sizePass ? `${formatFileSize(blob.size)} ≤ ${requirement.kb} KB` : `${formatFileSize(blob.size)} > ${requirement.kb} KB`);
+    setValidationItem(complianceItems.format, formatPass ? "pass" : "fail", formatPass ? `${readableFormat(formatSelect.value)} matches` : `${readableFormat(formatSelect.value)}; use ${readableFormat(requirement.mimeType)}`);
+    setValidationItem(complianceItems.background, backgroundPass ? "pass" : "warn", backgroundPass ? `${requirement.backgroundLabel} selected` : `Selected ${getCurrentBackgroundLabel()}, expected ${requirement.backgroundLabel}`);
+
+    setValidationItem(validationItems.dimensions, exactDimensionsPass ? "pass" : "warn", `${width} × ${height}px`);
+    setValidationItem(validationItems.fileSize, sizePass ? "pass" : "fail", `${formatFileSize(blob.size)} ${sizePass ? "meets" : "exceeds"} target`);
     setValidationItem(validationItems.brightness, brightnessPass ? "pass" : "warn", `${Math.round(metrics.meanBrightness)}/255 average`);
     setValidationItem(validationItems.contrast, contrastPass ? "pass" : "warn", `${Math.round(metrics.contrast)} contrast score`);
     setValidationItem(validationItems.sharpness, sharpnessPass ? "pass" : "warn", `${Math.round(metrics.sharpness)} detail score`);
-    setValidationItem(validationItems.background, backgroundPass ? "pass" : "warn", `${Math.round(metrics.edgeUniformity * 100)}% edge consistency`);
+    setValidationItem(validationItems.background, edgeBackgroundPass ? "pass" : "warn", `${Math.round(metrics.edgeUniformity * 100)}% edge consistency`);
 
     validationAdvice.innerHTML = "";
-    (advice.length ? advice : ["The processed image passes the current technical checks. Verify the official portal instructions before submitting."]).forEach((message) => {
+    (advice.length ? advice : ["The current technical and quality checks look good. Verify the official portal instructions before submitting."]).forEach((message) => {
         const li = document.createElement("li");
         li.textContent = message;
         validationAdvice.appendChild(li);
@@ -769,11 +817,44 @@ function generateValidationReport(canvas, blob, width, height, targetKBValue) {
 
     trackFormPhotoEvent("validation_report_generated", {
         score,
+        requirement: requirement.title,
+        technical_pass: technicalPass,
+        quality_pass: qualityPass,
         file_size_pass: sizePass,
-        brightness_pass: brightnessPass,
-        contrast_pass: contrastPass,
-        sharpness_pass: sharpnessPass
+        dimensions_pass: exactDimensionsPass,
+        format_pass: formatPass,
+        background_pass: backgroundPass
     });
+}
+
+function getActiveComplianceRequirement() {
+    const preset = presets[presetSelect?.value];
+    const isCustom = !preset || presetSelect?.value === "custom";
+    const backgroundValue = backgroundColorInput?.value || "#ffffff";
+    return {
+        title: isCustom ? "Custom requirement" : (state.activeRequirement || getPresetReadyFor(presetSelect.value)),
+        width: isCustom ? Number(targetWidth?.value || 0) : preset.width,
+        height: isCustom ? Number(targetHeight?.value || 0) : preset.height,
+        kb: isCustom ? Number(targetKB?.value || 0) : preset.kb,
+        mimeType: isCustom ? formatSelect?.value : preset.format,
+        backgroundValue: isCustom ? backgroundValue : (preset.whiteBg === false ? "transparent" : "#ffffff"),
+        backgroundLabel: isCustom ? getCurrentBackgroundLabel() : (preset.whiteBg === false ? "Transparent" : "White")
+    };
+}
+
+function getCurrentBackgroundLabel() {
+    const value = backgroundColorInput?.value || "#ffffff";
+    if (value === "transparent") return "Transparent";
+    if (value === "#dbeafe") return "Light Blue";
+    if (value === "#fee2e2") return "Light Red";
+    return "White";
+}
+
+function setComplianceBadge(element, status, label) {
+    if (!element) return;
+    element.classList.remove("pass", "warn", "fail");
+    element.classList.add(status);
+    element.textContent = label;
 }
 
 function analyzeCanvasQuality(canvas) {
@@ -841,6 +922,10 @@ function resetValidationReport() {
     validationReport.hidden = true;
     if (validationScore) validationScore.textContent = "--";
     if (validationScoreBar) validationScoreBar.style.width = "0%";
+    if (complianceRequirementName) complianceRequirementName.textContent = "Current requirement";
+    if (complianceTechnicalResult) complianceTechnicalResult.textContent = "Waiting";
+    setComplianceBadge(complianceStatusBadge, "", "Waiting");
+    Object.values(complianceItems).forEach((item) => setValidationItem(item, "warn", "Waiting"));
 }
 
 function getPresetReadyFor(presetValue) {
