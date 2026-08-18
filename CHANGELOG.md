@@ -13,3 +13,8 @@
 - Added sitemap.xml and robots.txt.
 - Added complete About, Contact, Privacy, and Terms pages.
 - Preserved the latest product features and assets.
+## 2026-08-17 — SEO & Crawl Hygiene Recovery v4
+- Canonical-friendly internal links now use `/` instead of `index.html`.
+- Legal pages are excluded from search indexing with `noindex, follow`.
+- Sitemap contains only canonical, indexable content pages and includes `lastmod`.
+- Preserved all existing site functionality and content.
