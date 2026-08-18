@@ -1607,3 +1607,33 @@ details p,
   .compliance-badge.warn { background:#3a2a05; color:#fcd34d; }
   .compliance-badge.fail { background:#3b0a0a; color:#fca5a5; }
 }
+
+
+/* FormPhotoFit v2.4 — faster image decode + visible compliance action */
+.is-image-loading .drop-zone {
+    pointer-events: none;
+}
+
+.is-image-loading .drop-icon {
+    animation: uploadPulse 1s ease-in-out infinite;
+}
+
+@keyframes uploadPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(.94); opacity: .72; }
+}
+
+#checkComplianceBtn {
+    border-color: rgba(15, 122, 229, 0.28);
+    background: linear-gradient(135deg, rgba(15, 122, 229, 0.08), rgba(16, 185, 129, 0.08));
+}
+
+#checkComplianceBtn:hover:not(:disabled) {
+    border-color: var(--primary);
+}
+
+@media (max-width: 560px) {
+    #checkComplianceBtn {
+        width: 100%;
+    }
+}

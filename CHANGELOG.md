@@ -18,3 +18,9 @@
 - Legal pages are excluded from search indexing with `noindex, follow`.
 - Sitemap contains only canonical, indexable content pages and includes `lastmod`.
 - Preserved all existing site functionality and content.
+
+## FormPhotoFit v2.3 — Compliance Checker
+- Added requirement-specific technical compliance checks for dimensions, file size, format, and background setting.
+- Upgraded the existing validation report into a combined compliance + image-quality report.
+- Added a clear technical-result badge and selected-requirement context.
+- Kept official-portal approval disclaimers and existing validation features intact.
