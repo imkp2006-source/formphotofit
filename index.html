@@ -56,7 +56,7 @@
 <a class="skip-link" href="#tool">Skip to photo resizer tool</a>
 <header class="site-header">
 <nav aria-label="Main navigation" class="nav container">
-<a aria-label="FormPhotoFit home" class="logo" href="/">
+<a aria-label="FormPhotoFit home" class="logo" href="index.html">
 <img alt="FormPhotoFit logo" class="logo-img" src="assets/logo.svg"/>
 <span>FormPhotoFit</span>
 </a>
@@ -103,13 +103,6 @@
 <p>
                         Upload an image, choose a preset or custom size, compress it under your target KB size, preview it, and download instantly.
                     </p>
-</div>
-<div class="trust-block card">
-<div class="trust-icon">🔒</div>
-<div class="trust-content">
-<h3>Your photo never leaves your device</h3>
-<p>Every resize, crop, and compression happens directly in your browser using client-side code. Nothing is uploaded to a server, stored, or reviewed by anyone \u2014 not even us. This matters most for identity documents like passport photos and signatures. Many paid tools explicitly upload your photo for "AI + human review" before returning it \u2014 FormPhotoFit never needs to, because the processing never leaves your device in the first place.</p>
-</div>
 </div>
 <div class="tool-layout">
 <div class="tool-panel card">
@@ -329,9 +322,6 @@
 <button class="btn btn-primary" disabled="" id="processBtn" type="button">
                 Resize &amp; Compress
               </button>
-<button class="btn btn-secondary" disabled="" id="checkComplianceBtn" type="button">
-                Check Compliance
-              </button>
 <button class="btn btn-secondary" disabled="" id="downloadBtn" type="button">
                 Download
               </button>
@@ -383,29 +373,15 @@
 <section aria-labelledby="validationReportTitle" aria-live="polite" class="validation-report" hidden="" id="validationReport">
 <div class="validation-report-head">
 <div>
-<span class="result-label">Compliance + quality check</span>
-<h3 id="validationReportTitle">Photo Compliance Report</h3>
-<p id="validationSummary">Process an image to generate a requirement-specific report.</p>
+<span class="result-label">Rule-based quality check</span>
+<h3 id="validationReportTitle">Image Validation Report</h3>
+<p id="validationSummary">Process an image to generate a report.</p>
 </div>
-<div class="validation-score-wrap">
-<div aria-label="Overall compliance score" class="validation-score">
+<div aria-label="Overall validation score" class="validation-score">
 <strong id="validationScore">--</strong>
 <span>/100</span>
 </div>
-<span class="compliance-badge" id="complianceStatusBadge">Waiting</span>
 </div>
-</div>
-<div class="compliance-context">
-<div><span class="result-label">Checking against</span><strong id="complianceRequirementName">Current requirement</strong></div>
-<div><span class="result-label">Technical result</span><strong id="complianceTechnicalResult">Waiting</strong></div>
-</div>
-<div class="compliance-grid" aria-label="Requirement compliance checks">
-<article class="validation-item" id="complianceDimensions"><span class="validation-icon">–</span><div><strong>Exact dimensions</strong><small>Waiting</small></div></article>
-<article class="validation-item" id="complianceFileSize"><span class="validation-icon">–</span><div><strong>File size limit</strong><small>Waiting</small></div></article>
-<article class="validation-item" id="complianceFormat"><span class="validation-icon">–</span><div><strong>File format</strong><small>Waiting</small></div></article>
-<article class="validation-item" id="complianceBackground"><span class="validation-icon">–</span><div><strong>Background setting</strong><small>Waiting</small></div></article>
-</div>
-<h4 class="validation-subheading">Image quality checks</h4>
 <div aria-hidden="true" class="validation-meter"><span id="validationScoreBar"></span></div>
 <div class="validation-grid">
 <article class="validation-item" id="validationDimensions"><span class="validation-icon">–</span><div><strong>Dimensions</strong><small>Waiting</small></div></article>
@@ -419,7 +395,7 @@
 <strong>Suggestions</strong>
 <ul id="validationAdvice"><li>Your suggestions will appear here.</li></ul>
 </div>
-<p class="validation-disclaimer">Technical compliance only. This report does not replace the official form instructions, human review, or face/background validation required by a specific portal.</p>
+<p class="validation-disclaimer">This is an automated visual-quality estimate, not an official portal approval or face-detection check.</p>
 </section>
 <section aria-live="polite" class="success-panel" hidden="" id="successPanel">
 <div aria-hidden="true" class="success-mark">✓</div>
@@ -627,7 +603,7 @@
 <footer class="site-footer">
 <div class="container footer-content">
 <div>
-<a class="logo footer-logo" href="/">
+<a class="logo footer-logo" href="index.html">
 <img alt="FormPhotoFit logo" class="logo-img" src="assets/logo.svg"/>
 <span>FormPhotoFit</span>
 </a>

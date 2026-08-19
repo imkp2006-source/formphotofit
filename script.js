@@ -54,11 +54,7 @@ const state = {
     resultBlob: null,
     resultUrl: "",
     resultMime: "image/jpeg",
-    activeRequirement: "General online form",
-    imageWidth: 0,
-    imageHeight: 0,
-    imageBitmap: false,
-    fileSize: 0
+    activeRequirement: "General online form"
 };
 
 const imageInput = document.getElementById("imageInput");
@@ -113,15 +109,6 @@ const validationScore = document.getElementById("validationScore");
 const validationScoreBar = document.getElementById("validationScoreBar");
 const validationSummary = document.getElementById("validationSummary");
 const validationAdvice = document.getElementById("validationAdvice");
-const complianceRequirementName = document.getElementById("complianceRequirementName");
-const complianceTechnicalResult = document.getElementById("complianceTechnicalResult");
-const complianceStatusBadge = document.getElementById("complianceStatusBadge");
-const complianceItems = {
-    dimensions: document.getElementById("complianceDimensions"),
-    fileSize: document.getElementById("complianceFileSize"),
-    format: document.getElementById("complianceFormat"),
-    background: document.getElementById("complianceBackground")
-};
 const validationItems = {
     dimensions: document.getElementById("validationDimensions"),
     fileSize: document.getElementById("validationFileSize"),
@@ -167,11 +154,6 @@ dropZone.addEventListener("drop", (event) => {
 presetSelect.addEventListener("change", applyPreset);
 modeSelect.addEventListener("change", applyModeDefaults);
 processBtn.addEventListener("click", processImage);
-
-const checkComplianceBtn = document.getElementById("checkComplianceBtn");
-if (checkComplianceBtn) {
-    checkComplianceBtn.addEventListener("click", checkOriginalCompliance);
-}
 downloadBtn.addEventListener("click", downloadImage);
 resetBtn.addEventListener("click", resetTool);
 
@@ -251,7 +233,7 @@ if (copyLinkBtn) {
     });
 }
 
-async function handleImageFile(file) {
+function handleImageFile(file) {
     if (!file.type.startsWith("image/")) {
         setStatus("Please upload a valid image file.", "error");
         return;
@@ -262,83 +244,38 @@ async function handleImageFile(file) {
         return;
     }
 
-    releaseLoadedImage();
-    clearResult();
-    processBtn.disabled = true;
-    resetBtn.disabled = true;
+    setStatus("Loading your image...", "warning");
 
-    setStatus("Preparing image preview…", "warning");
-    document.body.classList.add("is-image-loading");
+    const imageUrl = URL.createObjectURL(file);
+    const image = new Image();
 
-    try {
-        let image;
-        let width;
-        let height;
-        let isBitmap = false;
-
-        if (typeof createImageBitmap === "function") {
-            image = await createImageBitmap(file);
-            width = image.width;
-            height = image.height;
-            isBitmap = true;
-        } else {
-            const imageUrl = URL.createObjectURL(file);
-            image = new Image();
-            image.decoding = "async";
-            image.src = imageUrl;
-            await image.decode();
-            URL.revokeObjectURL(imageUrl);
-            width = image.naturalWidth;
-            height = image.naturalHeight;
-        }
+    image.onload = () => {
+        URL.revokeObjectURL(imageUrl);
 
         state.image = image;
         state.fileName = file.name;
-        state.fileSize = file.size;
-        state.imageWidth = width;
-        state.imageHeight = height;
-        state.imageBitmap = isBitmap;
+        clearResult();
 
         originalSize.textContent = formatFileSize(file.size);
-        originalDimensions.textContent = `${width} × ${height}px`;
+        originalDimensions.textContent = `${image.naturalWidth} × ${image.naturalHeight}px`;
 
         processBtn.disabled = false;
         resetBtn.disabled = false;
-        if (checkComplianceBtn) checkComplianceBtn.disabled = false;
 
-        setStatus("Image ready. Choose a requirement, then check compliance or resize it.", "success");
+        setStatus("Image loaded successfully. Choose settings and click Resize & Compress.", "success");
         trackEvent("image_upload_success", {
             file_size_kb: Math.round(file.size / 1024),
-            width,
-            height,
-            decode_method: isBitmap ? "createImageBitmap" : "image_decode"
+            width: image.naturalWidth,
+            height: image.naturalHeight
         });
-    } catch (error) {
-        console.error("Image decode failed:", error);
-        releaseLoadedImage();
-        setStatus("Could not load this image. Try a JPG, PNG, or WebP image.", "error");
-    } finally {
-        document.body.classList.remove("is-image-loading");
-    }
-}
-
-function releaseLoadedImage() {
-    if (state.imageBitmap && state.image && typeof state.image.close === "function") {
-        state.image.close();
-    }
-
-    state.image = null;
-    state.imageWidth = 0;
-    state.imageHeight = 0;
-    state.imageBitmap = false;
-    state.fileSize = 0;
-}
-
-function getImageDimensions(image) {
-    return {
-        width: state.imageWidth || image.naturalWidth || image.width || 0,
-        height: state.imageHeight || image.naturalHeight || image.height || 0
     };
+
+    image.onerror = () => {
+        URL.revokeObjectURL(imageUrl);
+        setStatus("Could not load this image. Please try another file.", "error");
+    };
+
+    image.src = imageUrl;
 }
 
 function applyPreset() {
@@ -391,95 +328,6 @@ function applyModeDefaults() {
     }
 
     clearResult();
-}
-
-function checkOriginalCompliance() {
-    if (!state.image) {
-        setStatus("Upload an image before checking compliance.", "error");
-        return;
-    }
-
-    const targetW = Number(targetWidth.value);
-    const targetH = Number(targetHeight.value);
-    const targetKBValue = Number(targetKB.value);
-    const requirement = getActiveComplianceRequirement();
-
-    if (!isValidNumber(targetW, 20, 4000) || !isValidNumber(targetH, 20, 4000) || !isValidNumber(targetKBValue, 5, 2000)) {
-        setStatus("Choose a valid requirement before checking compliance.", "error");
-        return;
-    }
-
-    const { width: sourceWidth, height: sourceHeight } = getImageDimensions(state.image);
-    const ratioMatches = Math.abs((sourceWidth / sourceHeight) - (targetW / targetH)) < 0.01;
-
-    const analysisCanvas = document.createElement("canvas");
-    const scale = Math.min(1, 360 / Math.max(sourceWidth, sourceHeight));
-    analysisCanvas.width = Math.max(24, Math.round(sourceWidth * scale));
-    analysisCanvas.height = Math.max(24, Math.round(sourceHeight * scale));
-    const analysisCtx = analysisCanvas.getContext("2d");
-    analysisCtx.drawImage(state.image, 0, 0, analysisCanvas.width, analysisCanvas.height);
-
-    const metrics = analyzeCanvasQuality(analysisCanvas);
-    const dimensionsExact = sourceWidth === targetW && sourceHeight === targetH;
-    const brightnessPass = metrics.meanBrightness >= 65 && metrics.meanBrightness <= 225;
-    const contrastPass = metrics.contrast >= 28;
-    const sharpnessPass = metrics.sharpness >= 10;
-    const backgroundPass = metrics.edgeUniformity >= 0.55;
-    const formatPass = formatAllowedForRequirement(formatSelect.value, requirement);
-
-    let score = 100;
-    const advice = [];
-
-    if (!dimensionsExact) { score -= 25; advice.push(`Resize to exactly ${targetW} × ${targetH}px.`); }
-    if (!ratioMatches) { score -= 15; advice.push("The current aspect ratio does not match the selected requirement."); }
-    if (!formatPass) { score -= 10; advice.push(`Use ${readableFormat(requirement.mimeType)} for this requirement.`); }
-    if (!brightnessPass) { score -= 10; advice.push(metrics.meanBrightness < 65 ? "The image looks dark; improve lighting or exposure." : "The image looks very bright; reduce exposure to preserve detail."); }
-    if (!contrastPass) { score -= 10; advice.push("Increase contrast slightly so the subject or signature is clearer."); }
-    if (!sharpnessPass) { score -= 15; advice.push("Use a sharper original image if possible."); }
-    if (!backgroundPass) { score -= 10; advice.push("The outer background is not very uniform; verify the official background requirement."); }
-
-    score = Math.max(0, Math.min(100, Math.round(score)));
-    updateComplianceReport({
-        score,
-        requirement,
-        width: sourceWidth,
-        height: sourceHeight,
-        targetWidth: targetW,
-        targetHeight: targetH,
-        targetKBValue,
-        mimeType: formatSelect.value,
-        sizePass: null,
-        dimensionsPass: dimensionsExact,
-        ratioPass: ratioMatches,
-        formatPass,
-        backgroundPass,
-        brightnessPass,
-        contrastPass,
-        sharpnessPass,
-        edgeBackgroundPass: backgroundPass,
-        technicalPass: dimensionsExact && formatPass,
-        strongResult: dimensionsExact && ratioMatches && formatPass && brightnessPass && contrastPass && sharpnessPass && backgroundPass,
-        advice,
-        originalCheck: true,
-        originalFileSize: state.fileSize || null
-    });
-
-    setStatus("Compliance check complete. Review the report before resizing.", "success");
-    validationReport?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    trackEvent("compliance_check", {
-        requirement: requirement.title,
-        source_width: sourceWidth,
-        source_height: sourceHeight,
-        target_width: targetW,
-        target_height: targetH,
-        score
-    });
-}
-
-function formatAllowedForRequirement(mimeType, requirement) {
-    const title = String(requirement?.title || "").toLowerCase();
-    if (title.includes("signature") && mimeType === "image/webp") return false;
-    return mimeType === "image/jpeg" || mimeType === "image/png" || mimeType === "image/webp";
 }
 
 async function processImage() {
@@ -595,8 +443,7 @@ function getFitMethod() {
 }
 
 function drawImageCover(ctx, image, canvasWidth, canvasHeight) {
-    const { width: imageWidth, height: imageHeight } = getImageDimensions(image);
-    const imageRatio = imageWidth / imageHeight;
+    const imageRatio = image.naturalWidth / image.naturalHeight;
     const canvasRatio = canvasWidth / canvasHeight;
 
     let sourceWidth;
@@ -605,15 +452,15 @@ function drawImageCover(ctx, image, canvasWidth, canvasHeight) {
     let sourceY;
 
     if (imageRatio > canvasRatio) {
-        sourceHeight = imageHeight;
+        sourceHeight = image.naturalHeight;
         sourceWidth = sourceHeight * canvasRatio;
-        sourceX = (imageWidth - sourceWidth) / 2;
+        sourceX = (image.naturalWidth - sourceWidth) / 2;
         sourceY = 0;
     } else {
-        sourceWidth = imageWidth;
+        sourceWidth = image.naturalWidth;
         sourceHeight = sourceWidth / canvasRatio;
         sourceX = 0;
-        sourceY = (imageHeight - sourceHeight) / 2;
+        sourceY = (image.naturalHeight - sourceHeight) / 2;
     }
 
     ctx.drawImage(
@@ -631,13 +478,12 @@ function drawImageCover(ctx, image, canvasWidth, canvasHeight) {
 
 function drawImageContain(ctx, image, canvasWidth, canvasHeight) {
     const scale = Math.min(
-        canvasWidth / getImageDimensions(image).width,
-        canvasHeight / getImageDimensions(image).height
+        canvasWidth / image.naturalWidth,
+        canvasHeight / image.naturalHeight
     );
 
-    const { width: imageWidth, height: imageHeight } = getImageDimensions(image);
-    const drawWidth = imageWidth * scale;
-    const drawHeight = imageHeight * scale;
+    const drawWidth = image.naturalWidth * scale;
+    const drawHeight = image.naturalHeight * scale;
     const drawX = (canvasWidth - drawWidth) / 2;
     const drawY = (canvasHeight - drawHeight) / 2;
 
@@ -764,11 +610,10 @@ function downloadImage() {
 }
 
 function resetTool() {
-    releaseLoadedImage();
+    state.image = null;
     state.fileName = "";
     clearResult();
 
-    if (checkComplianceBtn) checkComplianceBtn.disabled = true;
     imageInput.value = "";
     originalSize.textContent = "Not uploaded";
     originalDimensions.textContent = "Not uploaded";
@@ -878,158 +723,45 @@ function setBackgroundOption(value) {
 }
 
 
-function updateComplianceReport(result) {
-    if (!validationReport) return;
-
-    const {
-        score,
-        requirement,
-        width,
-        height,
-        targetWidth,
-        targetHeight,
-        targetKBValue,
-        mimeType,
-        sizePass,
-        dimensionsPass,
-        ratioPass,
-        formatPass,
-        backgroundPass,
-        brightnessPass,
-        contrastPass,
-        sharpnessPass,
-        edgeBackgroundPass,
-        technicalPass,
-        strongResult,
-        advice = [],
-        originalCheck = false,
-        originalFileSize = null
-    } = result;
-
-    validationReport.hidden = false;
-    validationScore.textContent = String(score);
-    validationScoreBar.style.width = `${score}%`;
-    if (complianceRequirementName) complianceRequirementName.textContent = requirement.title;
-    if (complianceTechnicalResult) complianceTechnicalResult.textContent = originalCheck
-        ? (strongResult ? "Original image is a strong technical match" : "Original image needs adjustment")
-        : (strongResult ? "Technical checks passed" : technicalPass ? "Technical match; review quality" : "Needs adjustment");
-
-    setComplianceBadge(complianceStatusBadge, strongResult ? "pass" : technicalPass ? "warn" : "fail", strongResult ? "Strong match" : technicalPass ? "Technical match" : "Adjust first");
-
-    validationSummary.textContent = originalCheck
-        ? (strongResult
-            ? "Your original image closely matches the selected requirement. Check the official portal before submitting."
-            : "Your original image does not yet match all selected technical checks. Use Resize & Compress to create a corrected version.")
-        : (strongResult
-            ? "The processed file matches the selected technical requirements and current quality checks."
-            : technicalPass
-                ? "The file matches the selected technical settings, but one or more visual-quality checks need review."
-                : "The file does not yet match all selected technical requirements.");
-
-    setValidationItem(complianceItems.dimensions, dimensionsPass ? "pass" : "fail", dimensionsPass ? `${width} × ${height}px matches` : `${width} × ${height}px; needs ${targetWidth} × ${targetHeight}px`);
-    if (sizePass === null) {
-        const originalLabel = originalFileSize ? formatFileSize(originalFileSize) : "Original file size";
-        setValidationItem(complianceItems.fileSize, "warn", `${originalLabel}; final limit ≤ ${targetKBValue} KB`);
-    } else {
-        setValidationItem(complianceItems.fileSize, sizePass ? "pass" : "fail", sizePass ? `Under ${targetKBValue} KB` : `Over ${targetKBValue} KB`);
-    }
-    setValidationItem(complianceItems.format, formatPass ? "pass" : "fail", formatPass ? `${readableFormat(mimeType)} accepted` : `Use ${readableFormat(requirement.mimeType)}`);
-    setValidationItem(complianceItems.background, backgroundPass ? "pass" : "warn", backgroundPass ? `${requirement.backgroundLabel} selected / consistent` : `Review ${requirement.backgroundLabel}`);
-
-    setValidationItem(validationItems.dimensions, dimensionsPass ? "pass" : "warn", `${width} × ${height}px`);
-    setValidationItem(validationItems.fileSize, sizePass === null ? "warn" : sizePass ? "pass" : "fail", sizePass === null ? `Target ≤ ${targetKBValue} KB` : `${targetKBValue} KB ${sizePass ? "limit met" : "limit exceeded"}`);
-    setValidationItem(validationItems.brightness, brightnessPass ? "pass" : "warn", brightnessPass ? "Good lighting range" : "Review brightness");
-    setValidationItem(validationItems.contrast, contrastPass ? "pass" : "warn", contrastPass ? "Good contrast" : "Low contrast");
-    setValidationItem(validationItems.sharpness, sharpnessPass ? "pass" : "warn", sharpnessPass ? "Good detail" : "Low detail");
-    setValidationItem(validationItems.background, edgeBackgroundPass ? "pass" : "warn", edgeBackgroundPass ? "Uniform edges" : "Check background");
-
-    validationAdvice.innerHTML = "";
-    const messages = advice.length ? advice : [originalCheck ? "This is a technical pre-check, not official approval." : "Verify the official portal instructions before submitting."];
-    messages.forEach((message) => {
-        const li = document.createElement("li");
-        li.textContent = message;
-        validationAdvice.appendChild(li);
-    });
-}
-
 function generateValidationReport(canvas, blob, width, height, targetKBValue) {
     if (!validationReport) return;
 
     const metrics = analyzeCanvasQuality(canvas);
-    const requirement = getActiveComplianceRequirement();
-    const exactDimensionsPass = width === requirement.width && height === requirement.height;
-    const sizePass = blob.size <= requirement.kb * 1024;
-    const formatPass = formatSelect.value === requirement.mimeType;
-    const backgroundPass = backgroundColorInput?.value === requirement.backgroundValue;
-
+    const sizePass = blob.size <= targetKBValue * 1024;
+    const dimensionsPass = width >= 100 && height >= 60;
     const brightnessPass = metrics.meanBrightness >= 65 && metrics.meanBrightness <= 225;
     const contrastPass = metrics.contrast >= 28;
     const sharpnessPass = metrics.sharpness >= 10;
-    const edgeBackgroundPass = metrics.edgeUniformity >= 0.55;
+    const backgroundPass = metrics.edgeUniformity >= 0.55;
 
-    let score = 0;
-    score += exactDimensionsPass ? 30 : 0;
-    score += sizePass ? 25 : 0;
-    score += formatPass ? 15 : 0;
-    score += backgroundPass ? 10 : 0;
-    score += brightnessPass ? 7 : 0;
-    score += contrastPass ? 5 : 0;
-    score += sharpnessPass ? 5 : 0;
-    score += (modeSelect.value !== "photo" || edgeBackgroundPass) ? 3 : 0;
-
-    const technicalPass = exactDimensionsPass && sizePass && formatPass && backgroundPass;
-    const qualityPass = brightnessPass && contrastPass && sharpnessPass;
-    const strongResult = technicalPass && qualityPass;
+    let score = 100;
     const advice = [];
 
-    if (!exactDimensionsPass) {
-        advice.push(`Output must be exactly ${requirement.width} × ${requirement.height}px for the selected requirement.`);
-    }
-    if (!sizePass) {
-        advice.push(`Output is ${formatFileSize(blob.size)}; keep it at or below ${requirement.kb} KB.`);
-    }
-    if (!formatPass) {
-        advice.push(`Use ${readableFormat(requirement.mimeType)} for the selected requirement.`);
-    }
-    if (!backgroundPass) {
-        advice.push(`The selected background setting does not match the current requirement guidance (${requirement.backgroundLabel}).`);
-    }
+    if (!dimensionsPass) { score -= 20; advice.push("Use larger output dimensions when the portal allows it."); }
+    if (!sizePass) { score -= 24; advice.push("Reduce dimensions or choose JPG/WebP to meet the target file size."); }
     if (!brightnessPass) {
-        advice.push(metrics.meanBrightness < 65 ? "The image looks dark; improve lighting or exposure." : "The image looks very bright; reduce exposure to preserve detail.");
+        score -= 12;
+        advice.push(metrics.meanBrightness < 65 ? "The image looks dark; increase lighting or exposure." : "The image looks very bright; reduce exposure to preserve detail.");
     }
-    if (!contrastPass) advice.push("Increase contrast slightly so the subject or signature is clearer.");
-    if (!sharpnessPass) advice.push("The image may be soft or blurry; use a sharper original image.");
-    if (modeSelect.value === "photo" && !edgeBackgroundPass) advice.push("The outer edges vary noticeably; a plain background may work better for many photo requirements.");
+    if (!contrastPass) { score -= 12; advice.push("Increase contrast slightly so the subject or signature is clearer."); }
+    if (!sharpnessPass) { score -= 18; advice.push("The image may be soft or blurry; use a sharper original image."); }
+    if (!backgroundPass && modeSelect.value === "photo") { score -= 8; advice.push("The outer edges are visually varied; official photos often work better with a plain background."); }
 
-    score = Math.max(0, Math.min(100, Math.round(score)));
+    score = Math.max(25, Math.min(100, Math.round(score)));
     validationReport.hidden = false;
     validationScore.textContent = String(score);
     validationScoreBar.style.width = `${score}%`;
+    validationSummary.textContent = score >= 90 ? "Excellent technical quality." : score >= 75 ? "Good result with minor improvements possible." : score >= 55 ? "Usable, but review the warnings below." : "Needs improvement before submission.";
 
-    if (complianceRequirementName) complianceRequirementName.textContent = requirement.title;
-    if (complianceTechnicalResult) complianceTechnicalResult.textContent = strongResult ? "Technical checks passed" : technicalPass ? "Technical match; review quality" : "Needs adjustment";
-    setComplianceBadge(complianceStatusBadge, strongResult ? "pass" : technicalPass ? "warn" : "fail", strongResult ? "Strong match" : technicalPass ? "Technical match" : "Adjust first");
-
-    validationSummary.textContent = strongResult
-        ? "The processed file matches the selected technical requirements and current quality checks."
-        : technicalPass
-            ? "The file matches the selected technical settings, but one or more visual-quality checks need review."
-            : "The file does not yet match all selected technical requirements.";
-
-    setValidationItem(complianceItems.dimensions, exactDimensionsPass ? "pass" : "fail", exactDimensionsPass ? `${width} × ${height}px matches` : `${width} × ${height}px; needs ${requirement.width} × ${requirement.height}px`);
-    setValidationItem(complianceItems.fileSize, sizePass ? "pass" : "fail", sizePass ? `${formatFileSize(blob.size)} ≤ ${requirement.kb} KB` : `${formatFileSize(blob.size)} > ${requirement.kb} KB`);
-    setValidationItem(complianceItems.format, formatPass ? "pass" : "fail", formatPass ? `${readableFormat(formatSelect.value)} matches` : `${readableFormat(formatSelect.value)}; use ${readableFormat(requirement.mimeType)}`);
-    setValidationItem(complianceItems.background, backgroundPass ? "pass" : "warn", backgroundPass ? `${requirement.backgroundLabel} selected` : `Selected ${getCurrentBackgroundLabel()}, expected ${requirement.backgroundLabel}`);
-
-    setValidationItem(validationItems.dimensions, exactDimensionsPass ? "pass" : "warn", `${width} × ${height}px`);
-    setValidationItem(validationItems.fileSize, sizePass ? "pass" : "fail", `${formatFileSize(blob.size)} ${sizePass ? "meets" : "exceeds"} target`);
+    setValidationItem(validationItems.dimensions, dimensionsPass ? "pass" : "warn", `${width} × ${height}px`);
+    setValidationItem(validationItems.fileSize, sizePass ? "pass" : "fail", `${formatFileSize(blob.size)} ${sizePass ? "meets" : "exceeds"} the target`);
     setValidationItem(validationItems.brightness, brightnessPass ? "pass" : "warn", `${Math.round(metrics.meanBrightness)}/255 average`);
     setValidationItem(validationItems.contrast, contrastPass ? "pass" : "warn", `${Math.round(metrics.contrast)} contrast score`);
     setValidationItem(validationItems.sharpness, sharpnessPass ? "pass" : "warn", `${Math.round(metrics.sharpness)} detail score`);
-    setValidationItem(validationItems.background, edgeBackgroundPass ? "pass" : "warn", `${Math.round(metrics.edgeUniformity * 100)}% edge consistency`);
+    setValidationItem(validationItems.background, backgroundPass ? "pass" : "warn", `${Math.round(metrics.edgeUniformity * 100)}% edge consistency`);
 
     validationAdvice.innerHTML = "";
-    (advice.length ? advice : ["The current technical and quality checks look good. Verify the official portal instructions before submitting."]).forEach((message) => {
+    (advice.length ? advice : ["The processed image passes the current technical checks. Verify the official portal instructions before submitting."]).forEach((message) => {
         const li = document.createElement("li");
         li.textContent = message;
         validationAdvice.appendChild(li);
@@ -1037,44 +769,11 @@ function generateValidationReport(canvas, blob, width, height, targetKBValue) {
 
     trackFormPhotoEvent("validation_report_generated", {
         score,
-        requirement: requirement.title,
-        technical_pass: technicalPass,
-        quality_pass: qualityPass,
         file_size_pass: sizePass,
-        dimensions_pass: exactDimensionsPass,
-        format_pass: formatPass,
-        background_pass: backgroundPass
+        brightness_pass: brightnessPass,
+        contrast_pass: contrastPass,
+        sharpness_pass: sharpnessPass
     });
-}
-
-function getActiveComplianceRequirement() {
-    const preset = presets[presetSelect?.value];
-    const isCustom = !preset || presetSelect?.value === "custom";
-    const backgroundValue = backgroundColorInput?.value || "#ffffff";
-    return {
-        title: isCustom ? "Custom requirement" : (state.activeRequirement || getPresetReadyFor(presetSelect.value)),
-        width: isCustom ? Number(targetWidth?.value || 0) : preset.width,
-        height: isCustom ? Number(targetHeight?.value || 0) : preset.height,
-        kb: isCustom ? Number(targetKB?.value || 0) : preset.kb,
-        mimeType: isCustom ? formatSelect?.value : preset.format,
-        backgroundValue: isCustom ? backgroundValue : (preset.whiteBg === false ? "transparent" : "#ffffff"),
-        backgroundLabel: isCustom ? getCurrentBackgroundLabel() : (preset.whiteBg === false ? "Transparent" : "White")
-    };
-}
-
-function getCurrentBackgroundLabel() {
-    const value = backgroundColorInput?.value || "#ffffff";
-    if (value === "transparent") return "Transparent";
-    if (value === "#dbeafe") return "Light Blue";
-    if (value === "#fee2e2") return "Light Red";
-    return "White";
-}
-
-function setComplianceBadge(element, status, label) {
-    if (!element) return;
-    element.classList.remove("pass", "warn", "fail");
-    element.classList.add(status);
-    element.textContent = label;
 }
 
 function analyzeCanvasQuality(canvas) {
@@ -1142,10 +841,6 @@ function resetValidationReport() {
     validationReport.hidden = true;
     if (validationScore) validationScore.textContent = "--";
     if (validationScoreBar) validationScoreBar.style.width = "0%";
-    if (complianceRequirementName) complianceRequirementName.textContent = "Current requirement";
-    if (complianceTechnicalResult) complianceTechnicalResult.textContent = "Waiting";
-    setComplianceBadge(complianceStatusBadge, "", "Waiting");
-    Object.values(complianceItems).forEach((item) => setValidationItem(item, "warn", "Waiting"));
 }
 
 function getPresetReadyFor(presetValue) {
